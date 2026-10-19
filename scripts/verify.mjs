@@ -18,11 +18,14 @@
 //          [--max-wait=8000]  per-beat settle timeout (ms)   [--min-wait=500]
 //          [--jobs=4]         pages loading beats from the URL in parallel
 //          [--source=<file>]  Terminal lines and [data-exact] text must appear verbatim in this file
+//                             (with several locales: `{locale}` in the path, e.g. reference/script.{locale}.md)
 //          [--strict]         warnings (text under 18 px, text inside the safe margin) fail the run too
 // Needs a Chromium-family browser: Chrome, Edge, Playwright's Chromium, or $BEATDECK_BROWSER (see scripts/lib.mjs).
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { auditFrame, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
+import { fileURLToPath } from 'node:url';
+import { auditFrame, builtLocales, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith('--'));
@@ -34,6 +37,22 @@ const MAX_WAIT = opt('max-wait', 8000);
 const MIN_WAIT = opt('min-wait', 500);
 const JOBS = Math.max(1, opt('jobs', 4));
 const STRICT = args.includes('--strict');
+// a multi-locale build (<dist>/locales.json): verify each locale on its own, one after the other (one preview port)
+const locales = builtLocales(DIST);
+if (locales) {
+  const source = args.find((a) => a.startsWith('--source='))?.slice(9);
+  const flags = args.filter((a) => a.startsWith('--') && !a.startsWith('--source='));
+  rmSync(OUT, { recursive: true, force: true });
+  const failed = [];
+  for (const l of locales) {
+    console.log(`\n── ${l} ──`);
+    const own = source ? [`--source=${source.replaceAll('{locale}', l)}`] : [];
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), `${DIST}/${l}`, `${OUT}/${l}`, ...flags, ...own], { stdio: 'inherit' });
+    if (r.status !== 0) failed.push(l);
+  }
+  console.log(`\n${failed.length ? '✕' : '✓'} verify · ${locales.length} locales (${locales.join(', ')})${failed.length ? ` · failed: ${failed.join(', ')}` : ''}`);
+  process.exit(failed.length ? 1 : 0);
+}
 const SOURCE = args.find((a) => a.startsWith('--source='))?.slice(9);
 if (SOURCE && !existsSync(SOURCE)) { console.error(`✕ verify: --source ${SOURCE} does not exist`); process.exit(1); }
 const JSQR = createRequire(import.meta.url).resolve('jsqr/dist/jsQR.js');

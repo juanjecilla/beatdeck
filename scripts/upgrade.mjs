@@ -26,7 +26,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ENGINE_DIRS = ['src/beatdeck', 'skills/building-a-beatdeck'];
-export const ENGINE_FILES = ['scripts/check-offline.mjs', 'scripts/verify.mjs', 'scripts/shot.mjs', 'scripts/lib.mjs', 'scripts/upgrade.mjs', 'themes/neutral.css', 'themes/light.css'];
+export const ENGINE_FILES = ['scripts/build.mjs', 'scripts/check-offline.mjs', 'scripts/verify.mjs', 'scripts/shot.mjs', 'scripts/lib.mjs', 'scripts/upgrade.mjs', 'themes/neutral.css', 'themes/light.css'];
 // shared config: [path in the talk, path in the beatdeck repo]
 export const SHARED = [
   ['vite.config.ts', 'vite.config.ts'], ['tsconfig.json', 'tsconfig.json'], ['src/main.tsx', 'src/main.tsx'],
@@ -36,7 +36,11 @@ export const SHARED = [
 export const SHARED_FILES = SHARED.map(([t]) => t);
 const MANIFEST = '.beatdeck.json';
 // scripts that belong to the beatdeck repo itself, never to a talk
-const REPO_ONLY_SCRIPT = (k) => k.includes('kernel-panic') || k === 'init';
+const REPO_ONLY_SCRIPT = (k) => k.includes('kernel-panic') || k.endsWith(':i18n') || k === 'i18n' || k === 'init';
+// engine scripts whose old default value is replaced by the new one (an edited script is left alone)
+const PREVIOUS_SCRIPTS = {
+  build: ['tsc --noEmit -p . && vite build && node scripts/check-offline.mjs dist deck'],
+};
 
 /** How a repo file looks inside a talk project (the same edits `init` makes). */
 export function forTalk(path, text) {
@@ -153,7 +157,11 @@ async function main() {
     }
   }
   for (const [k, v] of Object.entries(upPkg.scripts ?? {})) {
-    if (REPO_ONLY_SCRIPT(k) || pkg.scripts?.[k]) continue;
+    if (REPO_ONLY_SCRIPT(k)) continue;
+    if (pkg.scripts?.[k]) {
+      if (PREVIOUS_SCRIPTS[k]?.includes(pkg.scripts[k]) && pkg.scripts[k] !== v) { pkg.scripts[k] = v; log.pkg.push(`script "${k}" → ${v}`); }
+      continue;
+    }
     (pkg.scripts ??= {})[k] = v;
     log.pkg.push(`script "${k}" added`);
   }

@@ -59,7 +59,7 @@ export interface DeckDefinition<L = Record<string, never>> {
   id: string;
   /** Document title and default chrome label. */
   title: string;
-  /** `lang` attribute of the page. */
+  /** `lang` attribute of the page. In a multi-locale deck (`locales` in deck.config.ts) the build's locale wins. */
   lang?: string;
   scenes: SceneDef[];
 

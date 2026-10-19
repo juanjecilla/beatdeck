@@ -4,6 +4,7 @@
 //   npm run shot -- 3              → every beat of scene 3
 //   npm run shot -- 2.1-2.4        → a range
 //   npm run shot -- 3 --source=reference/script.md   (+ the exact-text check, as in verify)
+//   npm run shot -- 3 --locale=es   (a deck with `locales`; {locale} in --source is replaced)
 //   npm run shot -- 4.3 --mode=kernel-panic   (an example, beatdeck repo only)   --dist=dist (a build instead of the dev server)
 //
 // Each beat is loaded straight from its URL (?capture=1), shot once it has settled, and audited
@@ -11,23 +12,30 @@
 // --strict: warnings (small text, safe-area) count as problems.
 // For the full proof, run `npm run verify`.
 import { mkdirSync, readFileSync } from 'node:fs';
-import { auditFrame, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
+import { auditFrame, builtLocales, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const flag = (k) => args.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
 const specs = args.filter((a) => !a.startsWith('--'));
 const OUT = flag('out') ?? 'artifacts/shot';
-const SOURCE = flag('source');
+const LOCALE = flag('locale');
+const SOURCE = flag('source')?.replaceAll('{locale}', LOCALE ?? '{locale}');
+if (SOURCE?.includes('{locale}')) { console.error('✕ shot: --source has {locale}, pass --locale=<code>'); process.exit(1); }
 const STRICT = args.includes('--strict');
 const sourceText = SOURCE ? readFileSync(SOURCE, 'utf8') : null;
 if (!specs.length) {
-  console.error('usage: npm run shot -- <scene>[.<beat>] [<from>-<to>] … [--mode=<example>] [--dist=<dir>] [--out=<dir>]');
+  console.error('usage: npm run shot -- <scene>[.<beat>] [<from>-<to>] … [--mode=<example>] [--locale=<code>] [--dist=<dir>] [--strict] [--out=<dir>]');
   process.exit(1);
 }
 mkdirSync(OUT, { recursive: true });
 
-const dist = flag('dist');
-const { base, stop } = await startServer(dist ? { dist, port: 4176 } : { dev: true, mode: flag('mode'), port: 4176 });
+let dist = flag('dist');
+if (dist && builtLocales(dist)) {
+  if (!LOCALE || !builtLocales(dist).includes(LOCALE)) { console.error(`✕ shot: ${dist} has locales ${builtLocales(dist).join(', ')}: pass --locale=<code>`); process.exit(1); }
+  dist = `${dist}/${LOCALE}`;
+}
+const env = LOCALE && !dist ? { BEATDECK_LOCALE: LOCALE } : {};
+const { base, stop } = await startServer(dist ? { dist, port: 4176 } : { dev: true, mode: flag('mode'), port: 4176, env });
 const browser = await launchBrowser();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 const errors = [];

@@ -85,6 +85,32 @@ Change tokens in a theme file imported by `deck/index.tsx` (copy `themes/neutral
 in the deck (`.woff2` + `@font-face`) or come from `@fontsource*` packages — never from a remote URL.
 `themes/light.css` is a ready variant for bright rooms.
 
+## Several languages
+
+One deck, one build per language. In `deck.config.ts` list the locales (the first is the default):
+`locales: ['en', 'es']`. Put all localized text in `deck/i18n/en.ts` (the source table) and one file per other
+locale; `deck/i18n/index.ts` re-exports the first (`export { strings } from './en';`). Scenes import
+`import { strings as s } from '../i18n'` and read `s.idea.rules[0]`.
+
+```ts
+// i18n/en.ts: plain object, no `as const` (the other locales are checked against its type)
+export const strings = { title: 'One talk', how: { steps: ['One.', 'Two.'] } };
+export type Strings = typeof strings;
+// i18n/es.ts: tsc fails on a missing or extra key
+import type { Strings } from './en';
+export const strings = { title: 'Una charla', how: { steps: ['Una.', 'Dos.'] } } satisfies Strings;
+```
+
+- The beat map (`scenes.ts`) is shared: scene ids, titles and beat names are the operator's vocabulary and stay in
+  one language. Beat `note`s come from the table (`note: s.how.note`), so the presenter view speaks the talk's language.
+- Leave `lang` out of `defineDeck`: each build sets it. Locale-neutral values (author, `qrUrl`) stay in `deck.config.ts`.
+- Text is longer in some languages: check every locale's contact sheet, the safe-area warnings catch the overflow.
+- `npm run build` → `dist/<locale>/` (+ `dist/index.html` linking them); `--locale es` builds one.
+  `npm run verify` walks every locale → `artifacts/verify/<locale>/`; `--source=reference/script.{locale}.md`
+  checks each locale against its own script. `npm run shot -- 3 --locale=es`; `npm run dev` shows the default
+  locale (`BEATDECK_LOCALE=es npm run dev` another). Each locale has its own deck id, so timers and presenter
+  channels never mix. A working copy is `examples/i18n/` in the beatdeck repo.
+
 ## Presenter notes
 
 Put speaker cues in `note`, the source wording in `source`, and the source location in `ref`. The presenter

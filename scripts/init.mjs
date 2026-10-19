@@ -84,7 +84,7 @@ pkg.description = title ?? 'A talk built with beatdeck';
 delete pkg.repository;
 delete pkg.license;
 if (author) pkg.author = author; else delete pkg.author;
-for (const k of Object.keys(pkg.scripts)) if (k.includes('kernel-panic') || k === 'init') delete pkg.scripts[k];
+for (const k of Object.keys(pkg.scripts)) if (k.includes('kernel-panic') || k.endsWith(':i18n') || k === 'init') delete pkg.scripts[k];
 writeFileSync(p('package.json'), JSON.stringify(pkg, null, 2) + '\n');
 edit('package-lock.json', (s) => s.replace(/("name":\s*)"beatdeck"/g, `$1"${name}"`));
 

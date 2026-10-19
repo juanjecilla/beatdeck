@@ -13,6 +13,7 @@ verification). This file is the short version.
 | `themes/` | `neutral.css` (default), `light.css` | copy/adjust |
 | `src/beatdeck/` | the engine (state, navigation, presenter, overview, debug, stage) | only for generic changes |
 | `examples/kernel-panic/` | a full 47-beat production talk, reference only | no |
+| `examples/i18n/` | a 7-beat deck in two locales (string tables), reference only | no |
 | `skills/building-a-beatdeck/` | the skill + references + `extract_pptx.py` | — |
 | `templates/` | what `init` puts in a talk: `blank/deck/` (default starter), `talk/AGENTS.md`, `talk/ci.yml` | — |
 | `scripts/` | `check-offline.mjs`, `verify.mjs` | — |
@@ -30,6 +31,7 @@ npm run shot -- 3 4.2  # quick frames of some beats while designing → artifact
 npm run verify         # every beat forwards/back/from URL, compared → artifacts/verify/ (contact.png)
 npm run upgrade        # newer beatdeck engine; never touches deck/ (then npm install && npm run verify)
 npm run example:kernel-panic
+npm run build:i18n && npm run verify:i18n   # the two-locale example (examples/i18n/)
 ```
 
 ## Rules

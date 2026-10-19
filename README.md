@@ -82,10 +82,10 @@ QR code. A new talk starts from a blank two-scene deck instead (`init --demo` ke
 | | |
 | --- | --- |
 | `npm run dev` | dev server at `http://127.0.0.1:5173/#1.1` |
-| `npm run build` | typecheck + bundle + offline check → `dist/` (self-contained, any static server) |
+| `npm run build` | typecheck + bundle + offline check → `dist/` (self-contained, any static server). A deck with `locales` builds one bundle per language → `dist/<locale>/` (`--locale es` for one). |
 | `npm run present` | build and open the production build locally |
 | `npm run shot -- 3 4.2` | quick frames of a few beats (a scene, a beat, a range) from the dev server → `artifacts/shot/`, with the same text/layout audit. |
-| `npm run verify` | every beat walked forwards, walked back and reloaded from its URL, frames pixel-compared, reduced motion, QR decoded, presenter + overview, contact sheet → `artifacts/verify/`. Fails on any mismatch, console error or remote request. Uses Chrome or Edge if installed, else Playwright's Chromium (`npx playwright-core install chromium`). |
+| `npm run verify` | every beat walked forwards, walked back and reloaded from its URL, frames pixel-compared, reduced motion, QR decoded, presenter + overview, contact sheet → `artifacts/verify/`. Fails on any mismatch, console error or remote request; warns on small text and text near a stage edge (`--strict` to fail on those too). Walks every locale of a multi-language deck. Uses Chrome or Edge if installed, else Playwright's Chromium (`npx playwright-core install chromium`). |
 
 ## Updating a talk
 
@@ -138,6 +138,11 @@ to three servers"*.
 `themes/neutral.css` is the default: near-black stage, off-white Inter + JetBrains Mono, one accent (`--accent`),
 hairlines. `themes/light.css` is for bright rooms. To brand a deck, copy the theme and change the tokens. Fonts
 must be local (`@fontsource*` packages or `.woff2` files).
+
+## Several languages
+
+One deck, one build per language: `locales` in `deck.config.ts`, a typed string table per locale in `deck/i18n/`, one
+shared beat map. See `skills/building-a-beatdeck/references/authoring.md` ("Several languages") and `examples/i18n/`.
 
 ## Showcase: Kernel Panic
 

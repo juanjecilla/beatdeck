@@ -30,6 +30,9 @@ npm run upgrade        # newer beatdeck engine; never touches deck/ (then npm in
 ```
 
 With a written source, check exact text too: `npm run verify -- --source=reference/<script>.md`.
+Warnings (small text, text near an edge) don't fail unless you pass `--strict`.
+Several languages (`locales` in `deck/deck.config.ts`, a table per locale in `deck/i18n/`): `build` makes `dist/<locale>/`,
+`verify` checks each one (`--source=reference/script.{locale}.md`), `shot -- 3 --locale=es`. See `references/authoring.md` → "Several languages".
 
 ## Rules
 

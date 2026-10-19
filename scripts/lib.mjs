@@ -1,5 +1,6 @@
 // Shared by verify.mjs and shot.mjs.
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 /**
@@ -27,12 +28,12 @@ export const name = (s, b) => `${String(s).padStart(2, '0')}-${String(b).padStar
  * Serve the deck locally: `vite preview` of a build (`dist`), or the dev server (`dev: true`, no build needed;
  * `mode` picks an example). Resolves to { base, stop }.
  */
-export async function startServer({ dist = 'dist', dev = false, mode, port = 4174 } = {}) {
+export async function startServer({ dist = 'dist', dev = false, mode, port = 4174, env = {} } = {}) {
   const vite = 'node_modules/vite/bin/vite.js';
   const argv = dev
     ? [vite, '--host', '127.0.0.1', '--port', String(port), '--strictPort', ...(mode ? ['--mode', mode] : [])]
     : [vite, 'preview', '--outDir', dist, '--host', '127.0.0.1', '--port', String(port), '--strictPort'];
-  const server = spawn(process.execPath, argv, { stdio: 'pipe' });
+  const server = spawn(process.execPath, argv, { stdio: 'pipe', env: { ...process.env, ...env } });
   const stop = () => { try { server.kill(); } catch { /* already gone */ } };
   process.on('exit', stop);
   const base = `http://127.0.0.1:${port}/`;
@@ -149,6 +150,11 @@ export function auditFrame() {
   return res;
 }
 
+/** Locales of a multi-locale build (`<dist>/locales.json`, written by scripts/build.mjs), else null. */
+export function builtLocales(dist) {
+  try { return JSON.parse(readFileSync(`${dist}/locales.json`, 'utf8')).locales; } catch { return null; }
+}
+
 /** Safe-area entries from auditFrame as warning lines. */
 export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`);
 
@@ -157,7 +163,6 @@ export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px fro
  * Four 480×270 thumbnails per row, labelled.
  */
 export async function contactSheet(page, frames, out) {
-  const { readFileSync } = await import('node:fs');
   const cols = 4, w = 480, h = 270;
   const cells = frames.map(({ file, label }) => `<figure><img src="data:image/png;base64,${readFileSync(file).toString('base64')}"><figcaption>${label}</figcaption></figure>`).join('');
   await page.setViewportSize({ width: cols * (w + 8) + 8, height: 600 });
