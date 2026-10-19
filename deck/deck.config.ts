@@ -11,4 +11,6 @@ export const config = {
   /** Shown under the QR. */
   qrLabel: 'github.com/borjaperfra/beatdeck',
   scaffold: 'npx degit borjaperfra/beatdeck my-talk',
+  /** Layout audit: warn when text sits closer than this (stage px) to an edge. `false` = off. */
+  safeMargin: { x: 120, y: 100 } as { x: number; y: number } | false,
 } as const;

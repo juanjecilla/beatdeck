@@ -11,4 +11,6 @@ export const config = {
   qrUrl: 'TODO',
   /** Shown under the QR, e.g. "example.com/talk". */
   qrLabel: '',
+  /** Layout audit: warn when text sits closer than this (stage px) to an edge. `false` = off. */
+  safeMargin: { x: 120, y: 100 } as { x: number; y: number } | false,
 } as const;

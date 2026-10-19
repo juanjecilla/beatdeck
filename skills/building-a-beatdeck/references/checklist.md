@@ -5,7 +5,8 @@ Run before saying a deck (or a change to it) is done.
 ## Automated — `npm run verify`
 
 - [ ] `npm run build` passes: typecheck, bundle, offline check (no remote URL in `dist/`).
-- [ ] `npm run verify` exits 0. It checks, so you don't have to by hand:
+- [ ] `npm run verify` exits 0 and its warnings (small text, text inside the safe margin) are fixed or deliberate
+      (`--strict` makes them fail). It checks, so you don't have to by hand:
       every beat reached forwards (PageDown), backwards (PageUp, following `prev`) and straight from `#s.b`
       renders the same frame (pixel diff ≤ `--diff`, default 0.1%) · positions match · no console error or
       warning · no request to a non-local host · `?reduced=1` applies · the QR on stage decodes to `qrUrl`

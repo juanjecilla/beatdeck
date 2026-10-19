@@ -40,6 +40,8 @@ export const Name = () => <Scene index={3}><Name_ /></Scene>;
 ## Layout on the stage
 
 - Coordinates are stage pixels on 1920×1080. Use generous margins (≥ 120 px left/right, ≥ 100 px top).
+  `verify`/`shot` warn when text comes closer than that to an edge (`audit.safeMargin` in `deck.config.ts`;
+  `data-audit="off"` on an element to exempt it).
 - Huge type is the default voice: statements 150–320 px, numerals 180–260 px, body/meta 22–46 px.
   Nothing smaller than 18 px on stage — it must read from the back of the room.
 - `whiteSpace: 'nowrap'` on statements; break lines explicitly. Check widths in screenshots, not by eye.

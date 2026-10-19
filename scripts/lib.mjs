@@ -61,12 +61,12 @@ export async function settle(page, { min = 500, max = 8000 } = {}) {
 /**
  * DOM audit of the current frame (runs in the page via page.evaluate). Looks only at text that is actually
  * visible: effective opacity (own × ancestors) > 0.5, not hidden, not inside `[data-audit="off"]`.
- * Returns { errors, warnings, exact } — `exact` are the texts that must match the source verbatim
+ * Returns { errors, warnings, edges, exact } — `edges` are safe-area warnings (text closer than the deck's `audit.safeMargin` to an edge); `exact` are the texts that must match the source verbatim
  * (Terminal lines and `[data-exact]` elements).
  */
 export function auditFrame() {
   const stage = document.querySelector('.stage');
-  const res = { errors: [], warnings: [], exact: [] };
+  const res = { errors: [], warnings: [], exact: [], edges: [] };
   if (!stage) return res;
   const sr = stage.getBoundingClientRect();
   const k = sr.width / 1920;
@@ -80,6 +80,7 @@ export function auditFrame() {
     }
     return o > 0.5;
   };
+  const margin = window.__beatdeck?.audit?.safeMargin ?? null;
   const short = (t) => JSON.stringify(t.trim().replace(/\s+/g, ' ').slice(0, 40));
   const boxes = [];
   const small = new Set();
@@ -106,6 +107,12 @@ export function auditFrame() {
       boxes.push(b);
       if (b.x < -2 || b.y < -2 || b.x + b.w > 1922 || b.y + b.h > 1082) {
         res.errors.push(`${short(b.t)} is outside the 1920×1080 stage (x ${Math.round(b.x)}…${Math.round(b.x + b.w)}, y ${Math.round(b.y)}…${Math.round(b.y + b.h)})`);
+      } else if (margin && !el.closest('[data-bd-chrome]')) {
+        // safe area: inside the stage but cramped against an edge
+        const gaps = [['left', b.x, margin.x], ['right', 1920 - (b.x + b.w), margin.x], ['top', b.y, margin.y], ['bottom', 1080 - (b.y + b.h), margin.y]];
+        for (const [edge, d, m] of gaps) {
+          if (d < m && !res.edges.some((e) => e.t === short(b.t) && e.edge === edge)) res.edges.push({ t: short(b.t), edge, d: Math.round(d), m });
+        }
       }
     }
   }
@@ -132,6 +139,9 @@ export function auditFrame() {
   }
   return res;
 }
+
+/** Safe-area entries from auditFrame as warning lines. */
+export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`);
 
 /**
  * Render a contact sheet of frames (`[{ file, label }]`) into `out` using `page` (any blank page).

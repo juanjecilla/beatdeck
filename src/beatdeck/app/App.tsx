@@ -51,6 +51,9 @@ export function App({ def }: { def: DeckDefinition<any> }) {
         beats: deck.scenes.map((s) => s.beats.map((b) => !!b.auto)),
         tolerance: deck.scenes.map((s) => s.beats.map((b) => b.tolerance ?? null)),
         qrUrl: qrConfigured(def.qrUrl) ? def.qrUrl : null,
+        audit: {
+          safeMargin: def.audit?.safeMargin === false ? null : { x: def.audit?.safeMargin?.x ?? 120, y: def.audit?.safeMargin?.y ?? 100 },
+        },
         /** true while any GSAP tween or finite CSS animation/transition is still running */
         busy: () =>
           gsap.globalTimeline.getChildren(true, true, true).some((t) => t.isActive()) ||
@@ -101,7 +104,8 @@ export function App({ def }: { def: DeckDefinition<any> }) {
         <StageScale.Provider value={fit.scale}>
           <Stage />
         </StageScale.Provider>
-        {Chrome && <Chrome black={d.black} />}
+        {/* marker so the layout audit skips system chrome (default or the deck's own) */}
+        <div data-bd-chrome style={{ display: 'contents' }}>{Chrome && <Chrome black={d.black} />}</div>
         {/* cut to black (and operator blackout): instant, nothing on top except the Overlay */}
         <div className="layer" style={{ background: '#000', opacity: d.cut ? 1 : 0 }} />
         {Overlay && <Overlay />}
