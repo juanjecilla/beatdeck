@@ -5,6 +5,8 @@ language: en-US
 reviews:
   profile: chill
   request_changes_workflow: true
+  # the PR author cannot `@coderabbitai approve|resolve` their own PR past an unfinished review
+  allow_author_approval: false
   high_level_summary: true
   poem: false
   review_status: true

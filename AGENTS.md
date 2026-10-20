@@ -45,7 +45,8 @@ npm run example:kernel-panic
 ## Reviews
 
 CodeRabbit reviews every PR into `main` (`.coderabbit.yaml`); with its request-changes workflow it approves once
-all its comments are resolved. Before merging: fix each comment or reply on its thread with why not
-(`gh api -X POST repos/{owner}/{repo}/pulls/<n>/comments/<id>/replies -f body=...`), push, comment
-`@coderabbitai review` if it has not re-reviewed, then `@coderabbitai resolve`. Merge when CI is green and it has
-approved. A stacked PR (based on another branch) is reviewed after it is retargeted to `main`.
+all its comments are resolved. The author cannot force that (`allow_author_approval: false`): fix each comment or
+reply on its thread with why not (`gh api -X POST repos/{owner}/{repo}/pulls/<n>/comments/<id>/replies -f body=...`),
+push, and comment `@coderabbitai review` if it has not re-reviewed the latest commit; it resolves threads it
+finds fixed and then approves. Merge when CI is green and it has approved. If it is unavailable, an admin merges
+with `gh pr merge --admin` and the PR says so. A stacked PR (based on another branch) is reviewed after it is retargeted to `main`.
