@@ -107,7 +107,7 @@ export function App({ def }: { def: DeckDefinition<any> }) {
         {/* marker so the layout audit skips system chrome (default or the deck's own) */}
         <div data-bd-chrome style={{ display: 'contents' }}>{Chrome && <Chrome black={d.black} />}</div>
         {/* cut to black (and operator blackout): instant, nothing on top except the Overlay */}
-        <div className="layer" style={{ background: '#000', opacity: d.cut ? 1 : 0 }} />
+        <div className="layer" data-bd-cut style={{ background: '#000', opacity: d.cut ? 1 : 0 }} />
         {Overlay && <Overlay />}
       </div>
       {overview && <Overview onClose={() => setOverview(false)} />}
