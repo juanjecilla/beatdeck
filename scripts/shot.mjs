@@ -19,9 +19,12 @@ const flag = (k) => args.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
 const specs = args.filter((a) => !a.startsWith('--'));
 const OUT = flag('out') ?? 'artifacts/shot';
 let dist = flag('dist');
+const rawLocale = flag('locale');
+if (args.includes('--locale') || rawLocale === '') { console.error('✕ shot: --locale needs a value: --locale=<code>'); process.exit(1); }
 // the effective locale: --locale, else the first of a multi-locale build (its default), else none
 const built = dist ? builtLocales(dist) : null;
-const LOCALE = flag('locale') ?? built?.[0];
+if (dist && rawLocale && !built) { console.error(`✕ shot: --locale needs the root of a multi-locale build (${dist}/locales.json not found); with --dist=<root>/<locale> the locale is already chosen`); process.exit(1); }
+const LOCALE = rawLocale ?? built?.[0];
 const SOURCE = flag('source')?.replaceAll('{locale}', LOCALE ?? '{locale}');
 if (SOURCE?.includes('{locale}')) { console.error('✕ shot: --source has {locale}, pass --locale=<code>'); process.exit(1); }
 const STRICT = args.includes('--strict');

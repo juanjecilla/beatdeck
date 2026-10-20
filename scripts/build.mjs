@@ -14,11 +14,14 @@ import { join, resolve } from 'node:path';
 import { runnerImport } from 'vite';
 
 const args = process.argv.slice(2);
+const fail = (msg) => { console.error(`✕ build: ${msg}`); process.exit(1); };
+// `--k v` or `--k=v`; undefined when the flag is absent, an error when it is there without a value
 const flag = (k) => {
-  const eq = args.find((a) => a.startsWith(`--${k}=`));
-  if (eq) return eq.slice(k.length + 3);
-  const i = args.indexOf(`--${k}`);
-  return i >= 0 ? args[i + 1] : undefined;
+  const i = args.findIndex((a) => a === `--${k}` || a.startsWith(`--${k}=`));
+  if (i < 0) return undefined;
+  const v = args[i].includes('=') ? args[i].slice(k.length + 3) : args[i + 1];
+  if (!v || v.startsWith('--')) fail(`--${k} needs a value`);
+  return v;
 };
 const base = flag('base');
 const mode = flag('mode');
@@ -32,7 +35,6 @@ const run = (script, argv, env = {}) => {
   const r = spawnSync(node, [script, ...argv], { stdio: 'inherit', env: { ...startEnv, ...env } });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
-const fail = (msg) => { console.error(`✕ build: ${msg}`); process.exit(1); };
 
 run('node_modules/typescript/bin/tsc', ['--noEmit', '-p', '.']);
 
