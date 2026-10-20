@@ -2,6 +2,11 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
+## Unreleased
+- Audit: `verify` and `shot` warn when visible text sits closer than the deck's `safeMargin` (default 120 px left/right,
+  100 px top/bottom) to a stage edge, with beat, text and distance. Set `safeMargin` in `deck.config.ts` (`false` = off), opt out per
+  element with `data-audit="off"`; chrome is excluded. `--strict` turns all warnings into failures. (#2)
+
 ## 0.5.1
 - Fix: `upgrade` refused talks copied before `init` existed (they still had `.claude-plugin/`); it now refuses
   only the beatdeck repo itself (package named `beatdeck`), or pass `--force`.

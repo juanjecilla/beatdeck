@@ -23,4 +23,5 @@ export default defineDeck({
   Stage,
   fonts: ['400 100px "Inter Variable"', '600 100px "Inter Variable"', '400 32px "JetBrains Mono Variable"'],
   qrUrl: config.qrUrl,
+  audit: { safeMargin: config.safeMargin },
 });

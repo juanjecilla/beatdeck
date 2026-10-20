@@ -61,12 +61,12 @@ export async function settle(page, { min = 500, max = 8000 } = {}) {
 /**
  * DOM audit of the current frame (runs in the page via page.evaluate). Looks only at text that is actually
  * visible: effective opacity (own × ancestors) > 0.5, not hidden, not inside `[data-audit="off"]`.
- * Returns { errors, warnings, exact } — `exact` are the texts that must match the source verbatim
+ * Returns { errors, warnings, edges, exact } — `edges` are safe-area warnings (text closer than the deck's `audit.safeMargin` to an edge, one per text node and edge); `exact` are the texts that must match the source verbatim
  * (Terminal lines and `[data-exact]` elements).
  */
 export function auditFrame() {
   const stage = document.querySelector('.stage');
-  const res = { errors: [], warnings: [], exact: [] };
+  const res = { errors: [], warnings: [], exact: [], edges: [] };
   if (!stage) return res;
   const sr = stage.getBoundingClientRect();
   const k = sr.width / 1920;
@@ -80,6 +80,11 @@ export function auditFrame() {
     }
     return o > 0.5;
   };
+  const margin = window.__beatdeck?.audit?.safeMargin ?? null;
+  // an opaque cut (or operator blackout) hides everything before it in the DOM; only the Overlay is drawn above it
+  const cut = stage.querySelector('[data-bd-cut]');
+  const cutOn = !!cut && +getComputedStyle(cut).opacity > 0.5;
+  const nearEdge = new Map(); // text node → { edge → entry }: the closest line of each node per edge
   const short = (t) => JSON.stringify(t.trim().replace(/\s+/g, ' ').slice(0, 40));
   const boxes = [];
   const small = new Set();
@@ -106,6 +111,16 @@ export function auditFrame() {
       boxes.push(b);
       if (b.x < -2 || b.y < -2 || b.x + b.w > 1922 || b.y + b.h > 1082) {
         res.errors.push(`${short(b.t)} is outside the 1920×1080 stage (x ${Math.round(b.x)}…${Math.round(b.x + b.w)}, y ${Math.round(b.y)}…${Math.round(b.y + b.h)})`);
+      } else if (margin && !el.closest('[data-bd-chrome]') && !(cutOn && cut.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING)) {
+        // safe area: inside the stage but cramped against an edge
+        // the full line box, not the trimmed one used for overlaps: authors place text by its box
+        const top = (r.top - sr.top) / k, bottom = (r.bottom - sr.top) / k;
+        const gaps = [['left', b.x, margin.x], ['right', 1920 - (b.x + b.w), margin.x], ['top', top, margin.y], ['bottom', 1080 - bottom, margin.y]];
+        for (const [edge, d, m] of gaps) {
+          if (d >= m) continue;
+          const mine = nearEdge.get(n) ?? nearEdge.set(n, {}).get(n);
+          if (!mine[edge] || d < mine[edge].d) mine[edge] = { t: short(b.t), edge, d, m };
+        }
       }
     }
   }
@@ -126,12 +141,16 @@ export function auditFrame() {
       }
     }
   }
+  for (const byEdge of nearEdge.values()) for (const e of Object.values(byEdge)) res.edges.push({ ...e, d: Math.round(e.d) });
   res.warnings.push(...small);
   for (const el of stage.querySelectorAll('.bd-term-line, [data-exact]')) {
     if (visible(el) && el.textContent.trim()) res.exact.push({ t: el.textContent, term: el.classList.contains('bd-term-line') });
   }
   return res;
 }
+
+/** Safe-area entries from auditFrame as warning lines. */
+export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`);
 
 /**
  * Render a contact sheet of frames (`[{ file, label }]`) into `out` using `page` (any blank page).

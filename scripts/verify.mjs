@@ -18,10 +18,11 @@
 //          [--max-wait=8000]  per-beat settle timeout (ms)   [--min-wait=500]
 //          [--jobs=4]         pages loading beats from the URL in parallel
 //          [--source=<file>]  Terminal lines and [data-exact] text must appear verbatim in this file
+//          [--strict]         warnings (text under 18 px, text inside the safe margin) fail the run too
 // Needs a Chromium-family browser: Chrome, Edge, Playwright's Chromium, or $BEATDECK_BROWSER (see scripts/lib.mjs).
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { auditFrame, contactSheet, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
+import { auditFrame, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith('--'));
@@ -32,6 +33,7 @@ const DIFF = opt('diff', 0.1);
 const MAX_WAIT = opt('max-wait', 8000);
 const MIN_WAIT = opt('min-wait', 500);
 const JOBS = Math.max(1, opt('jobs', 4));
+const STRICT = args.includes('--strict');
 const SOURCE = args.find((a) => a.startsWith('--source='))?.slice(9);
 if (SOURCE && !existsSync(SOURCE)) { console.error(`✕ verify: --source ${SOURCE} does not exist`); process.exit(1); }
 const JSQR = createRequire(import.meta.url).resolve('jsqr/dist/jsQR.js');
@@ -92,6 +94,7 @@ for (const [s, b] of all) {
   const audit = await page.evaluate(auditFrame);
   audit.errors.forEach((e) => layout.push(`${s}.${b} ${e}`));
   audit.warnings.forEach((w) => warnings.add(w));
+  edgeWarnings(audit.edges).forEach((w) => warnings.add(`${s}.${b} ${w}`));
   audit.exact.forEach((e) => { if (!exact.has(e.t)) exact.set(e.t, { ...e, at: `${s}.${b}` }); });
   const h = await hashOf();
   if (h !== `#${s}.${b}`) errors.push(`[walk] expected #${s}.${b}, got ${h}`);
@@ -212,7 +215,7 @@ writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));
 await browser.close();
 stop();
 
-const ok = !errors.length && !remote.length && !mismatches.length && !layout.length && !notInSource.length;
+const ok = !errors.length && !remote.length && !mismatches.length && !layout.length && !notInSource.length && !(STRICT && warnings.size);
 console.log(`${ok ? '✓' : '✕'} verify · ${all.length} beats walked, ${back.length} walked back, ${all.length} reloaded from the URL · ${report.seconds}s`);
 console.log(`  frames identical (≤ ${DIFF}% px): ${mismatches.length ? `${mismatches.length} mismatch(es)` : 'yes'}`);
 mismatches.forEach((m) => console.log('    ' + m));
@@ -220,7 +223,7 @@ console.log(`  text and layout: ${layout.length ? `${layout.length} problem(s)` 
 layout.forEach((m) => console.log('    ' + m));
 console.log(`  exact text: ${SOURCE ? (notInSource.length ? `${notInSource.length} line(s) not in the source` : `${exact.size} line(s) match ${SOURCE}`) : `${exact.size} line(s) on stage, not checked (pass --source=<script>)`}`);
 notInSource.forEach((m) => console.log('    ' + m));
-if (warnings.size) { console.log(`  warnings (not failing): ${warnings.size}`); [...warnings].slice(0, 12).forEach((w) => console.log('    ' + w)); if (warnings.size > 12) console.log(`    … see report.json`); }
+if (warnings.size) { console.log(`  warnings (${STRICT ? 'failing: --strict' : 'not failing'}): ${warnings.size}`); [...warnings].slice(0, 12).forEach((w) => console.log('    ' + w)); if (warnings.size > 12) console.log(`    … see report.json`); }
 console.log(`  QR: ${qrUrl ? (decoded.size ? `decodes to ${qrUrl} on ${[...decoded.keys()].join(', ')}` : 'NOT FOUND') : 'not configured (qrUrl is TODO)'}`);
 console.log(`  console errors/warnings: ${errors.length} · remote requests: ${remote.length} · presenter: ${connected ? 'connected' : 'NOT connected'}`);
 errors.forEach((e) => console.log('    ' + e));

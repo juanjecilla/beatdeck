@@ -90,4 +90,9 @@ export interface DeckDefinition<L = Record<string, never>> {
   cursorHideMs?: number;
   /** Destination of the QR on the closing screen. `'TODO'` or empty = no QR (the presenter view warns). */
   qrUrl?: string;
+  /**
+   * Layout audit (`npm run verify` / `shot`). `safeMargin` warns when visible text comes closer than this many
+   * stage px to an edge (default x 120, y 100); `false` turns the check off. Per element: `data-audit="off"`.
+   */
+  audit?: { safeMargin?: { x?: number; y?: number } | false };
 }

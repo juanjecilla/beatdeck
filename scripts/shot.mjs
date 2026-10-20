@@ -8,15 +8,17 @@
 //
 // Each beat is loaded straight from its URL (?capture=1), shot once it has settled, and audited
 // (the same text checks as `npm run verify`). With more than one beat it also writes <out>/contact.png.
+// --strict: warnings (small text, safe-area) count as problems.
 // For the full proof, run `npm run verify`.
 import { mkdirSync, readFileSync } from 'node:fs';
-import { auditFrame, contactSheet, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
+import { auditFrame, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const flag = (k) => args.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
 const specs = args.filter((a) => !a.startsWith('--'));
 const OUT = flag('out') ?? 'artifacts/shot';
 const SOURCE = flag('source');
+const STRICT = args.includes('--strict');
 const sourceText = SOURCE ? readFileSync(SOURCE, 'utf8') : null;
 if (!specs.length) {
   console.error('usage: npm run shot -- <scene>[.<beat>] [<from>-<to>] … [--mode=<example>] [--dist=<dir>] [--out=<dir>]');
@@ -63,12 +65,13 @@ for (const [s, b] of wanted) {
   const file = `${OUT}/${name(s, b)}.png`;
   await page.screenshot({ path: file });
   shots.push({ file, label: `${s}.${b}` });
-  const { errors: found, warnings, exact } = await page.evaluate(auditFrame);
-  const issues = [...found, ...(sourceText ? missingFromSource(exact, sourceText).map((e) => `${JSON.stringify(e.t)} is not in ${SOURCE}`) : [])];
+  const { errors: found, warnings: small, edges, exact } = await page.evaluate(auditFrame);
+  const warnings = [...small, ...edgeWarnings(edges)];
+  const issues = [...found, ...(STRICT ? warnings : []), ...(sourceText ? missingFromSource(exact, sourceText).map((e) => `${JSON.stringify(e.t)} is not in ${SOURCE}`) : [])];
   problems += issues.length;
   console.log(`${issues.length ? '✕' : '✓'} ${s}.${b} → ${file}`);
   issues.forEach((i) => console.log('    ' + i));
-  warnings.forEach((w) => console.log('    (warning) ' + w));
+  warnings.forEach((w) => console.log(`    (${STRICT ? 'strict' : 'warning'}) ` + w));
 }
 errors.forEach((e) => console.log('  [error] ' + e));
 if (shots.length > 1) {
