@@ -44,10 +44,15 @@ npm run example:kernel-panic
 
 ## Reviews
 
-CodeRabbit reviews every PR into `main` (`.coderabbit.yaml`); with its request-changes workflow it approves once
-all its comments are resolved. The author cannot force that (`allow_author_approval: false`): fix each comment or
-reply on its thread with why not (`gh api -X POST repos/{owner}/{repo}/pulls/<n>/comments/<id>/replies -f body=...`),
-push, and comment `@coderabbitai review` if it has not re-reviewed the latest commit; it resolves threads it
-finds fixed and then approves. It never re-reviews a commit it has already reviewed, and about one review per hour
-is available, so put every fix in one push and keep other PRs drafts until their turn. Merge when CI is green and it has approved. If it is unavailable, an admin merges
-with `gh pr merge --admin` and the PR says so. A stacked PR (based on another branch) is reviewed after it is retargeted to `main`.
+CodeRabbit reviews every non-draft PR into `main` (`.coderabbit.yaml`). With its request-changes workflow it
+approves only when its review of the latest commit has completed, all its comments are resolved and the Pre-Merge
+Checks pass. The author cannot force that (`allow_author_approval: false`).
+
+1. Fix each comment, or reply on its thread with why not
+   (`gh api -X POST repos/{owner}/{repo}/pulls/<n>/comments/<id>/replies -f body=...`).
+2. Push all fixes in one commit: it never re-reviews a commit it has already reviewed, and about one review per hour
+   is available. Keep other PRs drafts until their turn; a stacked PR is reviewed after it is retargeted to `main`.
+3. Comment `@coderabbitai review` if it has not re-reviewed the latest commit. It resolves threads it finds fixed,
+   then approves.
+4. Merge when CI is green and it has approved. If it is unavailable, an admin merges with `gh pr merge --admin`
+   and the PR says so.
