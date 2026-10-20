@@ -18,7 +18,10 @@ const args = process.argv.slice(2);
 const flag = (k) => args.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
 const specs = args.filter((a) => !a.startsWith('--'));
 const OUT = flag('out') ?? 'artifacts/shot';
-const LOCALE = flag('locale');
+let dist = flag('dist');
+// the effective locale: --locale, else the first of a multi-locale build (its default), else none
+const built = dist ? builtLocales(dist) : null;
+const LOCALE = flag('locale') ?? built?.[0];
 const SOURCE = flag('source')?.replaceAll('{locale}', LOCALE ?? '{locale}');
 if (SOURCE?.includes('{locale}')) { console.error('✕ shot: --source has {locale}, pass --locale=<code>'); process.exit(1); }
 const STRICT = args.includes('--strict');
@@ -29,9 +32,8 @@ if (!specs.length) {
 }
 mkdirSync(OUT, { recursive: true });
 
-let dist = flag('dist');
-if (dist && builtLocales(dist)) {
-  if (!LOCALE || !builtLocales(dist).includes(LOCALE)) { console.error(`✕ shot: ${dist} has locales ${builtLocales(dist).join(', ')}: pass --locale=<code>`); process.exit(1); }
+if (built) {
+  if (!built.includes(LOCALE)) { console.error(`✕ shot: ${dist} has locales ${built.join(', ')}, not ${LOCALE}`); process.exit(1); }
   dist = `${dist}/${LOCALE}`;
 }
 const env = LOCALE && !dist ? { BEATDECK_LOCALE: LOCALE } : {};

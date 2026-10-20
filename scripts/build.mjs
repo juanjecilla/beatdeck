@@ -3,6 +3,7 @@
 //
 //   npm run build                    deck/ → dist/   (several locales: dist/<locale>/, dist/index.html, dist/locales.json)
 //   npm run build -- --locale es     only that locale (the others in dist/ stay as they are)
+//   npm run build -- --base /talk/   public base path (several locales: /talk/<locale>/ for each)
 //   npm run build -- --mode i18n     examples/i18n/ → dist-i18n/ (beatdeck repo only)
 //
 // Per locale, vite runs with BEATDECK_LOCALE=<locale>: `<deck>/i18n/index.ts` then resolves to `<deck>/i18n/<locale>.ts`
@@ -13,7 +14,13 @@ import { join, resolve } from 'node:path';
 import { runnerImport } from 'vite';
 
 const args = process.argv.slice(2);
-const flag = (k) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : undefined; };
+const flag = (k) => {
+  const eq = args.find((a) => a.startsWith(`--${k}=`));
+  if (eq) return eq.slice(k.length + 3);
+  const i = args.indexOf(`--${k}`);
+  return i >= 0 ? args[i + 1] : undefined;
+};
+const base = flag('base');
 const mode = flag('mode');
 const only = flag('locale');
 const deckDir = mode ? `examples/${mode}` : 'deck';
@@ -33,14 +40,17 @@ run('node_modules/typescript/bin/tsc', ['--noEmit', '-p', '.']);
 let locales = null;
 const cfgFile = resolve(deckDir, 'deck.config.ts');
 if (existsSync(cfgFile)) {
-  const { module } = await runnerImport(cfgFile, { configFile: false, logLevel: 'silent' });
+  // same aliases as vite.config.ts, in case the config imports from the engine or the deck
+  const alias = { beatdeck: resolve('src/beatdeck/index.ts'), '@deck': resolve(deckDir, 'index.tsx') };
+  const { module } = await runnerImport(cfgFile, { configFile: false, logLevel: 'silent', resolve: { alias } });
   locales = module.config?.locales ?? null;
 }
-const vite = (outDir, env) => run('node_modules/vite/bin/vite.js', ['build', ...(mode ? ['--mode', mode] : []), ...(outDir ? ['--outDir', outDir] : [])], env);
+const slash = (p) => p.replace(/\/?$/, '/');
+const vite = (outDir, env, baseOf) => run('node_modules/vite/bin/vite.js', ['build', ...(mode ? ['--mode', mode] : []), ...(outDir ? ['--outDir', outDir] : []), ...(base ? ['--base', baseOf] : [])], env);
 
 if (!locales) {
   if (only) fail(`--locale ${only}, but ${deckDir}/deck.config.ts declares no \`locales\``);
-  vite();
+  vite(undefined, {}, base);
   run('scripts/check-offline.mjs', [dist, deckDir]);
   process.exit(0);
 }
@@ -62,7 +72,7 @@ if (only && !locales.includes(only)) fail(`--locale ${only} is not one of ${loca
 if (!only) rmSync(dist, { recursive: true, force: true });
 for (const l of only ? [only] : locales) {
   console.log(`\n── ${l} ──`);
-  vite(`${dist}/${l}`, { BEATDECK_LOCALE: l });
+  vite(`${dist}/${l}`, { BEATDECK_LOCALE: l }, base && `${slash(base)}${l}/`);
   run('scripts/check-offline.mjs', [`${dist}/${l}`, deckDir]);
 }
 
