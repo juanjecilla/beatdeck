@@ -113,7 +113,9 @@ export function auditFrame() {
         res.errors.push(`${short(b.t)} is outside the 1920×1080 stage (x ${Math.round(b.x)}…${Math.round(b.x + b.w)}, y ${Math.round(b.y)}…${Math.round(b.y + b.h)})`);
       } else if (margin && !el.closest('[data-bd-chrome]') && !(cutOn && cut.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING)) {
         // safe area: inside the stage but cramped against an edge
-        const gaps = [['left', b.x, margin.x], ['right', 1920 - (b.x + b.w), margin.x], ['top', b.y, margin.y], ['bottom', 1080 - (b.y + b.h), margin.y]];
+        // the full line box, not the trimmed one used for overlaps: authors place text by its box
+        const top = (r.top - sr.top) / k, bottom = (r.bottom - sr.top) / k;
+        const gaps = [['left', b.x, margin.x], ['right', 1920 - (b.x + b.w), margin.x], ['top', top, margin.y], ['bottom', 1080 - bottom, margin.y]];
         for (const [edge, d, m] of gaps) {
           if (d >= m) continue;
           const mine = nearEdge.get(n) ?? nearEdge.set(n, {}).get(n);
