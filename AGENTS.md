@@ -41,3 +41,11 @@ npm run example:kernel-panic
 4. Offline: no CDN, remote fonts, APIs or analytics. The build fails otherwise.
 5. Content fidelity: never invent quotes, numbers, logos or URLs. Unknowns are explicit `TODO`s.
 6. Don't call it done before `npm run build` and `npm run verify` pass and you've looked at `artifacts/verify/contact.png`.
+
+## Reviews
+
+CodeRabbit reviews every PR into `main` (`.coderabbit.yaml`); with its request-changes workflow it approves once
+all its comments are resolved. Before merging: fix each comment or reply on its thread with why not
+(`gh api -X POST repos/{owner}/{repo}/pulls/<n>/comments/<id>/replies -f body=...`), push, comment
+`@coderabbitai review` if it has not re-reviewed, then `@coderabbitai resolve`. Merge when CI is green and it has
+approved. A stacked PR (based on another branch) is reviewed after it is retargeted to `main`.

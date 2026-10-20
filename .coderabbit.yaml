@@ -1,0 +1,54 @@
+# CodeRabbit (free for public repos) reviews every PR into main. With the request-changes
+# workflow on, it approves a PR once every comment it made is resolved, and only then.
+# Schema: https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: chill
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: [ "main" ]
+  path_filters:
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.woff2"
+    - "!package-lock.json"
+    - "!dist/**"
+    - "!dist-*/**"
+    - "!artifacts/**"
+    - "!examples/kernel-panic/assets/**"
+  path_instructions:
+    - path: "src/beatdeck/**"
+      instructions: >-
+        Read AGENTS.md first: the engine never imports from deck/ (decks import from
+        'beatdeck'); `{ scene, beat }` is the whole state and every beat renders from
+        `#s.b` alone; nothing in the engine may fetch from the network (no CDN, remote
+        fonts, APIs or analytics). Flag violations of those. Changes here must be generic,
+        not for one talk.
+    - path: "{deck,templates/blank/deck}/**"
+      instructions: >-
+        Scenes use absolute positions on the fixed 1920x1080 stage; nothing responsive.
+        Text stays at 18 px or more and inside the safe margins (120 px left/right,
+        100 px top/bottom). Motion that runs by itself only inside beats marked `auto`.
+        Never invented quotes, numbers, logos or URLs: unknowns are explicit `TODO`s.
+    - path: "scripts/**"
+      instructions: >-
+        Everything here except init.mjs ships into talks and is replaced by
+        `npm run upgrade`. A new engine file must be added to ENGINE_FILES in
+        scripts/upgrade.mjs, and a repo-only script to REPO_ONLY_SCRIPT. Keep Node
+        scripts free of dependencies beyond package.json and portable to Windows paths.
+    - path: "{skills,templates/talk}/**"
+      instructions: >-
+        These are instructions for agents building talks and must agree with AGENTS.md
+        and with what the scripts actually do (commands, flags, file paths). Flag drift.
+    - path: "examples/**"
+      instructions: >-
+        Reference decks, not part of a talk. kernel-panic has non-MIT assets and is not
+        touched by `init`; do not ask for polish there beyond real defects.
+chat:
+  auto_reply: true

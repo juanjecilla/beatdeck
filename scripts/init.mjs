@@ -51,7 +51,7 @@ const edit = (f, fn) => { if (existsSync(p(f))) writeFileSync(p(f), fn(readFileS
 
 // 1 · what belongs to the beatdeck repo, not to a talk
 // (templates/ is read below, then removed at the end)
-for (const f of ['examples', '.claude-plugin', 'docs/media', 'README.md', 'CHANGELOG.md', '.github/workflows/ci.yml']) rmSync(p(f), { recursive: true, force: true });
+for (const f of ['examples', '.claude-plugin', 'docs/media', 'README.md', 'CHANGELOG.md', '.coderabbit.yaml', '.github/workflows/ci.yml']) rmSync(p(f), { recursive: true, force: true });
 
 // 1b · the deck: a blank two-scene starter (title, questions) unless --demo keeps beatdeck's demo
 if (!demo) {
