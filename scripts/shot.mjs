@@ -12,6 +12,7 @@
 // --strict: warnings (small text, safe-area) count as problems.
 // For the full proof, run `npm run verify`.
 import { mkdirSync, readFileSync } from 'node:fs';
+import { basename, dirname, resolve } from 'node:path';
 import { auditFrame, builtLocales, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
@@ -23,8 +24,13 @@ const rawLocale = flag('locale');
 if (args.includes('--locale') || rawLocale === '') { console.error('✕ shot: --locale needs a value: --locale=<code>'); process.exit(1); }
 // the effective locale: --locale, else the first of a multi-locale build (its default), else none
 const built = dist ? builtLocales(dist) : null;
-if (dist && rawLocale && !built) { console.error(`✕ shot: --locale needs the root of a multi-locale build (${dist}/locales.json not found); with --dist=<root>/<locale> the locale is already chosen`); process.exit(1); }
-const LOCALE = rawLocale ?? built?.[0];
+// --dist=<root>/<locale> of a multi-locale build: that folder name is the locale
+const folder = dist && !built && builtLocales(dirname(resolve(dist)))?.includes(basename(resolve(dist))) ? basename(resolve(dist)) : undefined;
+if (dist && rawLocale && !built && rawLocale !== folder) {
+  console.error(`✕ shot: --locale=${rawLocale} does not fit --dist=${dist}: ${folder ? `that is the ${folder} build` : 'it has no locales.json'}; pass the build root (and --locale), or drop --locale`);
+  process.exit(1);
+}
+const LOCALE = rawLocale ?? built?.[0] ?? folder;
 const SOURCE = flag('source')?.replaceAll('{locale}', LOCALE ?? '{locale}');
 if (SOURCE?.includes('{locale}')) { console.error('✕ shot: --source has {locale}, pass --locale=<code>'); process.exit(1); }
 const STRICT = args.includes('--strict');
