@@ -5,6 +5,7 @@ import { bindKeys, localTarget, startCursorAutoHide } from '../navigation';
 import { startStageSync } from '../presenter';
 import { parseHash } from '../persistence';
 import { flags } from '../flags';
+import { LOCALE } from '../locale';
 import type { DeckDefinition, DeckState } from '../types';
 import { DefaultChrome } from './DefaultChrome';
 import { qrConfigured } from '../components/QR';
@@ -50,6 +51,7 @@ export function App({ def }: { def: DeckDefinition<any> }) {
       (window as unknown as { __beatdeck: unknown }).__beatdeck = {
         beats: deck.scenes.map((s) => s.beats.map((b) => !!b.auto)),
         tolerance: deck.scenes.map((s) => s.beats.map((b) => b.tolerance ?? null)),
+        locale: LOCALE,
         qrUrl: qrConfigured(def.qrUrl) ? def.qrUrl : null,
         audit: {
           safeMargin: def.audit?.safeMargin === false ? null : { x: def.audit?.safeMargin?.x ?? 120, y: def.audit?.safeMargin?.y ?? 100 },

@@ -96,4 +96,6 @@ export default defineDeck<Live>({
   fonts: ['500 100px "Roboto"', '300 100px "Roboto"', '400 32px "Roboto Mono"', '500 32px "Roboto Mono"', '400 100px "Archivo Black"'],
   cursorHideMs: deckConfig.cursorHideMs,
   qrUrl: deckConfig.speakerQrUrl,
+  // the HUD (uptime, ids, corners) hugs the edges on purpose and is drawn inside Stage, not as Chrome
+  audit: { safeMargin: false },
 });

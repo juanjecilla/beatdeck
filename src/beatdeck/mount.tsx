@@ -5,11 +5,14 @@ import './styles/operator.css';
 import './styles/components.css';
 import { flags, reducedMotion } from './flags';
 import { createEngine } from './engine';
+import { LOCALE } from './locale';
 import type { DeckDefinition } from './types';
 
 /** Boot the deck: wait (bounded) for its fonts, then render the stage — or the presenter view with `?view=presenter`. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function mount(def: DeckDefinition<any>, el: HTMLElement = document.getElementById('root')!) {
+  // a localized build: its own `lang`, and its own id so two locales on one origin never share a timer or presenter channel
+  if (LOCALE) def = { ...def, id: `${def.id}-${LOCALE}`, lang: LOCALE };
   createEngine(def);
   document.documentElement.lang = def.lang ?? 'en';
   document.title = flags.presenter ? `Presenter · ${def.title}` : def.title;

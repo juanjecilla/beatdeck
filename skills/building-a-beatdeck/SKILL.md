@@ -158,7 +158,9 @@ npm run verify -- --source=reference/<script>.md   # + every Terminal line / dat
 
 Besides comparing frames, `verify` audits the visible text of every beat and **fails** on text outside the
 1920×1080 stage, text overlapping other text, and `µ`/`ß` broken by uppercase; it **warns** on text under
-18 px. When the source has exact text (code, commands, formulas, quotes), pass `--source`: Terminal lines are
+18 px and when text sits inside the safe margin of an edge (`safeMargin` in `deck.config.ts`, default
+120 px left/right, 100 px top/bottom; `--strict` makes warnings fail). A talk in several languages: `references/authoring.md` →
+"Several languages"; `verify` then runs every locale. When the source has exact text (code, commands, formulas, quotes), pass `--source`: Terminal lines are
 checked automatically, and any other element that must match the script verbatim gets a `data-exact`
 attribute (`<div data-exact>distancia = c × (t_llegada − t_envío)</div>`). `data-exact` text is compared with the
 source as prose (Markdown markers like `**`, `>`, bullets and line breaks don't count, so a sentence may span

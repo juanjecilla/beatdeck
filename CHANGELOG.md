@@ -2,7 +2,13 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
-## Unreleased
+## 0.6.0
+- **Several languages from one deck.** `locales: ['en', 'es']` in `deck.config.ts`, a typed string table per locale in
+  `deck/i18n/` (`index.ts` re-exports the first), one shared beat map. `npm run build` (now `scripts/build.mjs`)
+  builds `dist/<locale>/` plus a root page linking them; `--locale es` builds one. `verify` walks every locale
+  (`--source=…{locale}…`), `shot --locale=es`. Each build sets `<html lang>` and suffixes the deck id. Example:
+  `examples/i18n/`. `upgrade` adds `scripts/build.mjs` and replaces the old default `build` script (an edited one is
+  left alone). From 0.5.x run `npm run upgrade` twice: the first run still executes the old `upgrade.mjs`. (#1)
 - Audit: `verify` and `shot` warn when visible text sits closer than the deck's `safeMargin` (default 120 px left/right,
   100 px top/bottom) to a stage edge, with beat, text and distance. Set `safeMargin` in `deck.config.ts` (`false` = off), opt out per
   element with `data-audit="off"`; chrome is excluded. `--strict` turns all warnings into failures. (#2)
