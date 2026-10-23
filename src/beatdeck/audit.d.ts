@@ -13,3 +13,6 @@ export interface AuditResult {
 
 /** Audit the frame on screen. Self-contained: pass it to `page.evaluate`. */
 export function auditFrame(): AuditResult;
+
+export function edgeLine(e: AuditResult['edges'][number]): string;
+export function coveredLine(c: AuditResult['covered'][number]): string;

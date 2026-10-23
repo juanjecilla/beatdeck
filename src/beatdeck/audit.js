@@ -141,3 +141,9 @@ export function auditFrame() {
   }
   return res;
 }
+
+/** A safe-area entry from `auditFrame` as a warning line. */
+export const edgeLine = (e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`;
+
+/** A covered-text entry from `auditFrame` as a warning line. */
+export const coveredLine = (c) => `${c.t} is covered by ${c.by} (add data-audit="off" to the covering element if intended)`;

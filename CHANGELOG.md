@@ -2,6 +2,14 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
+## Unreleased
+- Audit: `verify` and `shot` warn about **covered text** — a background, image, video or painted SVG shape on top of
+  visible text (3 of 5 sample points along a line). Empty layers, `<svg>`/`<canvas>` boxes, chrome and
+  `data-audit="off"` are exempt; `--strict` makes it fail.
+- `npm run dev` shows an audit badge (bottom-left) with the findings for the beat on screen. It is not bundled in a
+  build, and absent with `?capture=1` and in the presenter window.
+- The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
+
 ## 0.6.0
 - **Several languages from one deck.** `locales: ['en', 'es']` in `deck.config.ts`, a typed string table per locale in
   `deck/i18n/` (`index.ts` re-exports the first), one shared beat map. `npm run build` (now `scripts/build.mjs`)

@@ -60,6 +60,7 @@ export async function settle(page, { min = 500, max = 8000 } = {}) {
 }
 
 // The frame audit lives in the engine (src/beatdeck/audit.js) so the dev badge shares it; scripts pass it to page.evaluate.
+import { coveredLine, edgeLine } from '../src/beatdeck/audit.js';
 export { auditFrame } from '../src/beatdeck/audit.js';
 
 /** Locales of a multi-locale build (`<dist>/locales.json`, written by scripts/build.mjs), else null. */
@@ -67,11 +68,9 @@ export function builtLocales(dist) {
   try { return JSON.parse(readFileSync(`${dist}/locales.json`, 'utf8')).locales; } catch { return null; }
 }
 
-/** Covered-text entries from auditFrame as warning lines. */
-export const coveredWarnings = (covered) => covered.map((c) => `${c.t} is covered by ${c.by} (add data-audit="off" to the covering element if intended)`);
-
-/** Safe-area entries from auditFrame as warning lines. */
-export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`);
+/** Covered-text and safe-area entries from auditFrame as warning lines. */
+export const coveredWarnings = (covered) => covered.map(coveredLine);
+export const edgeWarnings = (edges) => edges.map(edgeLine);
 
 /**
  * Render a contact sheet of frames (`[{ file, label }]`) into `out` using `page` (any blank page).
