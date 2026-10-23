@@ -59,101 +59,16 @@ export async function settle(page, { min = 500, max = 8000 } = {}) {
   return Date.now() - start;
 }
 
-/**
- * DOM audit of the current frame (runs in the page via page.evaluate). Looks only at text that is actually
- * visible: effective opacity (own × ancestors) > 0.5, not hidden, not inside `[data-audit="off"]`.
- * Returns { errors, warnings, edges, exact } — `edges` are safe-area warnings (text closer than the deck's `audit.safeMargin` to an edge, one per text node and edge); `exact` are the texts that must match the source verbatim
- * (Terminal lines and `[data-exact]` elements).
- */
-export function auditFrame() {
-  const stage = document.querySelector('.stage');
-  const res = { errors: [], warnings: [], exact: [], edges: [] };
-  if (!stage) return res;
-  const sr = stage.getBoundingClientRect();
-  const k = sr.width / 1920;
-  const visible = (el) => {
-    let o = 1;
-    for (let e = el; e && e !== stage.parentElement; e = e.parentElement) {
-      if (e.dataset?.audit === 'off') return false;
-      const cs = getComputedStyle(e);
-      if (cs.visibility === 'hidden' || cs.display === 'none') return false;
-      o *= +cs.opacity;
-    }
-    return o > 0.5;
-  };
-  const margin = window.__beatdeck?.audit?.safeMargin ?? null;
-  // an opaque cut (or operator blackout) hides everything before it in the DOM; only the Overlay is drawn above it
-  const cut = stage.querySelector('[data-bd-cut]');
-  const cutOn = !!cut && +getComputedStyle(cut).opacity > 0.5;
-  const nearEdge = new Map(); // text node → { edge → entry }: the closest line of each node per edge
-  const short = (t) => JSON.stringify(t.trim().replace(/\s+/g, ' ').slice(0, 40));
-  const boxes = [];
-  const small = new Set();
-  const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
-  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    if (!n.textContent.trim()) continue;
-    const el = n.parentElement;
-    if (!el || !visible(el)) continue;
-    const cs = getComputedStyle(el);
-    // characters that change meaning under text-transform: uppercase (µ → Greek Μ, ß → SS)
-    if (/[µß]/.test(n.textContent) && cs.textTransform === 'uppercase') {
-      res.errors.push(`uppercase changes ${short(n.textContent)} (µ/ß): wrap the unit in <span className="keep-case">`);
-    }
-    const px = parseFloat(cs.fontSize) / k;
-    if (px < 17.5) small.add(`${short(n.textContent)} is ${Math.round(px)} px (stage minimum 18)`);
-    const range = document.createRange();
-    range.selectNodeContents(n);
-    for (const r of range.getClientRects()) {
-      if (r.width < 1 || r.height < 1) continue;
-      // the line box of large type is much taller than its glyphs: keep the central ~0.8 em for overlap tests
-      const fpx = parseFloat(cs.fontSize);
-      const inset = Math.max(0, (r.height - 0.8 * fpx) / 2);
-      const b = { x: (r.left - sr.left) / k, y: (r.top + inset - sr.top) / k, w: r.width / k, h: (r.height - 2 * inset) / k, t: n.textContent, n };
-      boxes.push(b);
-      if (b.x < -2 || b.y < -2 || b.x + b.w > 1922 || b.y + b.h > 1082) {
-        res.errors.push(`${short(b.t)} is outside the 1920×1080 stage (x ${Math.round(b.x)}…${Math.round(b.x + b.w)}, y ${Math.round(b.y)}…${Math.round(b.y + b.h)})`);
-      } else if (margin && !el.closest('[data-bd-chrome]') && !(cutOn && cut.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING)) {
-        // safe area: inside the stage but cramped against an edge
-        // the full line box, not the trimmed one used for overlaps: authors place text by its box
-        const top = (r.top - sr.top) / k, bottom = (r.bottom - sr.top) / k;
-        const gaps = [['left', b.x, margin.x], ['right', 1920 - (b.x + b.w), margin.x], ['top', top, margin.y], ['bottom', 1080 - bottom, margin.y]];
-        for (const [edge, d, m] of gaps) {
-          if (d >= m) continue;
-          const mine = nearEdge.get(n) ?? nearEdge.set(n, {}).get(n);
-          if (!mine[edge] || d < mine[edge].d) mine[edge] = { t: short(b.t), edge, d, m };
-        }
-      }
-    }
-  }
-  // overlapping text: two different text nodes whose line boxes share > 30% of the smaller one
-  const seen = new Set();
-  for (let i = 0; i < boxes.length; i++) {
-    for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i], c = boxes[j];
-      if (a.n === c.n) continue;
-      const ix = Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x);
-      const iy = Math.min(a.y + a.h, c.y + c.h) - Math.max(a.y, c.y);
-      if (ix <= 0 || iy <= 0) continue;
-      if (ix * iy > 0.3 * Math.min(a.w * a.h, c.w * c.h)) {
-        const key = `${a.t}|${c.t}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        res.errors.push(`text overlaps: ${short(a.t)} and ${short(c.t)} (add data-audit="off" if intended)`);
-      }
-    }
-  }
-  for (const byEdge of nearEdge.values()) for (const e of Object.values(byEdge)) res.edges.push({ ...e, d: Math.round(e.d) });
-  res.warnings.push(...small);
-  for (const el of stage.querySelectorAll('.bd-term-line, [data-exact]')) {
-    if (visible(el) && el.textContent.trim()) res.exact.push({ t: el.textContent, term: el.classList.contains('bd-term-line') });
-  }
-  return res;
-}
+// The frame audit lives in the engine (src/beatdeck/audit.js) so the dev badge shares it; scripts pass it to page.evaluate.
+export { auditFrame } from '../src/beatdeck/audit.js';
 
 /** Locales of a multi-locale build (`<dist>/locales.json`, written by scripts/build.mjs), else null. */
 export function builtLocales(dist) {
   try { return JSON.parse(readFileSync(`${dist}/locales.json`, 'utf8')).locales; } catch { return null; }
 }
+
+/** Covered-text entries from auditFrame as warning lines. */
+export const coveredWarnings = (covered) => covered.map((c) => `${c.t} is covered by ${c.by} (add data-audit="off" to the covering element if intended)`);
 
 /** Safe-area entries from auditFrame as warning lines. */
 export const edgeWarnings = (edges) => edges.map((e) => `${e.t} is ${e.d} px from the ${e.edge} edge (safe margin ${e.m})`);
