@@ -63,6 +63,95 @@ export async function settle(page, { min = 500, max = 8000 } = {}) {
 import { coveredLine, edgeLine } from '../src/beatdeck/audit.js';
 export { auditFrame } from '../src/beatdeck/audit.js';
 
+/**
+ * % of pixels that differ (by more than 40 in any channel) between two PNGs, decoded in `page` (any page).
+ * `a` and `b` are Buffers (or data URLs); the images must have the same size. `scale` < 1 compares both
+ * downsampled (averaged), which ignores antialiasing and keeps structural differences.
+ */
+export async function imageDiff(page, a, b, scale = 1) {
+  const url = (x) => (typeof x === 'string' ? x : `data:image/png;base64,${x.toString('base64')}`);
+  return page.evaluate(async ([ua, ub, sc]) => {
+    const img = (u) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = u; });
+    const px = (i) => {
+      const c = document.createElement('canvas'); c.width = Math.round(i.width * sc); c.height = Math.round(i.height * sc);
+      const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(i, 0, 0, c.width, c.height);
+      return x.getImageData(0, 0, c.width, c.height).data;
+    };
+    const [A, B] = (await Promise.all([img(ua), img(ub)])).map(px);
+    let n = 0;
+    for (let k = 0; k < A.length; k += 4) if (Math.abs(A[k] - B[k]) > 40 || Math.abs(A[k + 1] - B[k + 1]) > 40 || Math.abs(A[k + 2] - B[k + 2]) > 40) n++;
+    return (100 * n) / (A.length / 4);
+  }, [url(a), url(b), scale]);
+}
+
+/**
+ * Like imageDiff, between a PNG (Buffer) and a raw RGBA bitmap of `w`×`h` px (what PDFium renders). Both are
+ * downsampled by `scale` the same way before they are compared.
+ */
+export async function imageDiffRgba(page, png, rgba, w, h, scale = 1) {
+  return page.evaluate(async ([u, b64, w, h, sc]) => {
+    const i = await new Promise((r) => { const im = new Image(); im.onload = () => r(im); im.src = u; });
+    const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+    const full = document.createElement('canvas'); full.width = w; full.height = h;
+    full.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(bytes.buffer), w, h), 0, 0);
+    const px = (src) => {
+      const c = document.createElement('canvas'); c.width = Math.round(w * sc); c.height = Math.round(h * sc);
+      const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);
+      return x.getImageData(0, 0, c.width, c.height).data;
+    };
+    const A = px(i), B = px(full);
+    let n = 0;
+    for (let k = 0; k < A.length; k += 4) if (Math.abs(A[k] - B[k]) > 40 || Math.abs(A[k + 1] - B[k + 1]) > 40 || Math.abs(A[k + 2] - B[k + 2]) > 40) n++;
+    return (100 * n) / (A.length / 4);
+  }, [`data:image/png;base64,${png.toString('base64')}`, Buffer.from(rgba).toString('base64'), w, h, scale]);
+}
+
+/**
+ * Visible text of the current frame as lines in stage px, `[{ t, x, y, w, h, size }]` (runs in the page via
+ * page.evaluate, self-contained). Same visibility rule as auditFrame; used for the text layer of raster PDF pages.
+ */
+export function textRuns() {
+  const stage = document.querySelector('.stage');
+  if (!stage) return [];
+  const sr = stage.getBoundingClientRect();
+  const k = sr.width / 1920;
+  const visible = (el) => {
+    let o = 1;
+    for (let e = el; e && e !== stage.parentElement; e = e.parentElement) {
+      const cs = getComputedStyle(e);
+      if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+      o *= +cs.opacity;
+    }
+    return o > 0.5;
+  };
+  const out = [];
+  const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const el = n.parentElement;
+    if (!n.textContent.trim() || !el || !visible(el)) continue;
+    const cs = getComputedStyle(el);
+    const size = parseFloat(cs.fontSize) / k;
+    // one run per line box: split the node's text at the line breaks the layout made
+    const text = n.textContent;
+    let from = 0, lastTop = null, lastRect = null;
+    const flush = (end) => {
+      const t = text.slice(from, end).replace(/\s+/g, ' ').trim();
+      if (t && lastRect) out.push({ t: cs.textTransform === 'uppercase' ? t.toUpperCase() : t, x: (lastRect.left - sr.left) / k, y: (lastRect.top - sr.top) / k, w: lastRect.width / k, h: lastRect.height / k, size });
+    };
+    const range = document.createRange();
+    for (let i = 0; i < text.length; i++) {
+      range.setStart(n, i); range.setEnd(n, i + 1);
+      const r = range.getClientRects()[0];
+      if (!r || r.width === 0) continue;
+      if (lastTop !== null && Math.abs(r.top - lastTop) > r.height / 2) { flush(i); from = i; lastRect = null; }
+      lastTop = r.top;
+      lastRect = lastRect ? { left: Math.min(lastRect.left, r.left), top: Math.min(lastRect.top, r.top), width: Math.max(lastRect.left + lastRect.width, r.right) - Math.min(lastRect.left, r.left), height: Math.max(lastRect.height, r.height) } : { left: r.left, top: r.top, width: r.width, height: r.height };
+    }
+    flush(text.length);
+  }
+  return out;
+}
+
 /** Locales of a multi-locale build (`<dist>/locales.json`, written by scripts/build.mjs), else null. */
 export function builtLocales(dist) {
   try { return JSON.parse(readFileSync(`${dist}/locales.json`, 'utf8')).locales; } catch { return null; }
