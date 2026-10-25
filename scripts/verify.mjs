@@ -19,13 +19,13 @@
 //          [--jobs=4]         pages loading beats from the URL in parallel
 //          [--source=<file>]  Terminal lines and [data-exact] text must appear verbatim in this file
 //                             (with several locales: `{locale}` in the path, e.g. reference/script.{locale}.md)
-//          [--strict]         warnings (text under 18 px, text inside the safe margin) fail the run too
+//          [--strict]         warnings (text under 18 px, text inside the safe margin, covered text) fail the run too
 // Needs a Chromium-family browser: Chrome, Edge, Playwright's Chromium, or $BEATDECK_BROWSER (see scripts/lib.mjs).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { auditFrame, builtLocales, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
+import { auditFrame, builtLocales, contactSheet, coveredWarnings, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith('--'));
@@ -114,6 +114,7 @@ for (const [s, b] of all) {
   audit.errors.forEach((e) => layout.push(`${s}.${b} ${e}`));
   audit.warnings.forEach((w) => warnings.add(w));
   edgeWarnings(audit.edges).forEach((w) => warnings.add(`${s}.${b} ${w}`));
+  coveredWarnings(audit.covered).forEach((w) => warnings.add(`${s}.${b} ${w}`));
   audit.exact.forEach((e) => { if (!exact.has(e.t)) exact.set(e.t, { ...e, at: `${s}.${b}` }); });
   const h = await hashOf();
   if (h !== `#${s}.${b}`) errors.push(`[walk] expected #${s}.${b}, got ${h}`);

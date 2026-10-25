@@ -17,6 +17,13 @@
 
 .debug { position: fixed; right: 12px; bottom: 12px; z-index: 11; width: 460px; background: rgba(10,10,10,.94); border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.8); font-size: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; cursor: default; user-select: text; }
 .debug b { color: var(--op-accent); }
+.audit-badge { position: fixed; left: 12px; bottom: 12px; z-index: 11; max-width: 560px; font-size: 12px; cursor: default; user-select: text; }
+.audit-badge button { font: inherit; padding: 4px 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(10,10,10,.9); color: rgba(255,255,255,.75); cursor: pointer; }
+.audit-badge button.ok { color: #6ee7a0; }
+.audit-badge button.warn { color: #f5c451; }
+.audit-badge button.bad { color: #ff7a7a; }
+.audit-badge ul { margin: 6px 0 0; padding: 8px 12px 8px 26px; background: rgba(10,10,10,.94); border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.8); display: flex; flex-direction: column; gap: 4px; }
+.audit-badge li.bad { color: #ff7a7a; }
 .debug-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .debug button, .debug select { background: #161616; color: #fff; border: 1px solid rgba(255,255,255,.2); font: inherit; padding: 3px 8px; cursor: pointer; }
 .debug pre { margin: 0; max-height: 280px; overflow: auto; font-size: 11px; color: rgba(255,255,255,.7); white-space: pre; }

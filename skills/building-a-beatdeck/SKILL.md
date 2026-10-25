@@ -167,7 +167,8 @@ source as prose (Markdown markers like `**`, `>`, bullets and line breaks don't 
 quote lines); Terminal lines are compared character for character. `npm run shot -- … --source=…` checks the
 same while iterating. The check is one-way: it proves stage text is in the script, not that every script fact
 reached the stage — that is the content audit's job. If an overlap is intentional
-(a glitch layer, text over its own shadow), mark that element `data-audit="off"` and say why.
+(a glitch layer, text over its own shadow), mark that element `data-audit="off"` and say why. The same goes for
+covered text (a card, image or shape painted over text), which is reported as a warning.
 
 If a beat has an intentionally random or live layer (particles, dithering, a clock), give that beat a
 `tolerance` (% of pixels) in `scenes.ts` and say why. Never raise tolerances to silence a real mismatch.
