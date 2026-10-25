@@ -25,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { auditFrame, builtLocales, contactSheet, coveredWarnings, edgeWarnings, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
+import { auditFrame, builtLocales, contactSheet, coveredWarnings, edgeWarnings, imageDiff, launchBrowser, missingFromSource, name, settle as settleOn, sleep, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith('--'));
@@ -155,17 +155,7 @@ if (back.at(-1)?.join('.') !== '1.1') errors.push(`[back] PageUp from the end st
 const cmp = await context.newPage();
 await cmp.setContent('<canvas id=a></canvas><canvas id=b></canvas>');
 const b64 = (f) => `data:image/png;base64,${readFileSync(f).toString('base64')}`;
-async function diffPct(fa, fb) {
-  return cmp.evaluate(async ([ua, ub]) => {
-    const img = (u) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = u; });
-    const [ia, ib] = await Promise.all([img(ua), img(ub)]);
-    const px = (i, id) => { const c = document.getElementById(id); c.width = i.width; c.height = i.height; const x = c.getContext('2d'); x.drawImage(i, 0, 0); return x.getImageData(0, 0, i.width, i.height).data; };
-    const a = px(ia, 'a'), b = px(ib, 'b');
-    let n = 0;
-    for (let k = 0; k < a.length; k += 4) if (Math.abs(a[k] - b[k]) > 40 || Math.abs(a[k + 1] - b[k + 1]) > 40 || Math.abs(a[k + 2] - b[k + 2]) > 40) n++;
-    return (100 * n) / (a.length / 4);
-  }, [b64(fa), b64(fb)]);
-}
+const diffPct = (fa, fb) => imageDiff(cmp, readFileSync(fa), readFileSync(fb));
 const mismatches = [];
 for (const [s, b] of all) {
   const d = await diffPct(`${OUT}/walk-${name(s, b)}.png`, `${OUT}/direct-${name(s, b)}.png`);

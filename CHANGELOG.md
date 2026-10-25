@@ -9,6 +9,16 @@ Talk projects update with `npm run upgrade` (see README → Updating a talk).
 - `npm run dev` shows an audit badge (bottom-left) with the findings for the beat on screen. It is not bundled in a
   build, and absent with `?capture=1` and in the presenter window.
 - The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
+- **`npm run export`**: the talk as a PDF (vector, selectable text) and a folder of PNGs, one page per beat; `--handout`
+  one page per scene (its last beat), `--notes` adds the beat notes under each page, `--format=pdf,png`. Each page is
+  checked against the screen with PDFium; one that the print gets wrong becomes an image with an invisible text layer.
+  It reports what a still page cannot keep, per page: `auto` beats, frames that never settle, ambient motion, covered
+  text, and state the deck changes outside the beat. Text overlap fails; the rest are warnings (`--strict`).
+- **Variants**: `variants: { theme: { attr: 'data-theme', values: ['dark', 'light'], default: 'dark' } }` in
+  `defineDeck` declares a look the speaker switches live. The export pins the default (`--variant=theme=light`, or
+  `--variant=all` for every combination, each in its own folder) and warns about `<html>` attributes the deck sets
+  that are not declared.
+- New dev dependencies: `pdf-lib`, `@hyzyla/pdfium`.
 
 ## 0.6.0
 - **Several languages from one deck.** `locales: ['en', 'es']` in `deck.config.ts`, a typed string table per locale in
