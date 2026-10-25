@@ -2,7 +2,7 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
-## Unreleased
+## 0.7.0
 - Audit: `verify` and `shot` warn about **covered text** — a background, image, video or painted SVG shape on top of
   visible text (3 of 5 sample points along a line). Empty layers, `<svg>`/`<canvas>` boxes, chrome and
   `data-audit="off"` are exempt; `--strict` makes it fail.
