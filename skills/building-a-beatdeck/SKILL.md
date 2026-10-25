@@ -182,6 +182,7 @@ settle, the closing QR scans, no placeholder left except an explicit, reported `
 
 Write `docs/RUNBOOK.md` from `references/runbook-template.md` (how to run it on the day, keys, presenter
 window, failure recovery). Tell the user what is still `TODO` and what you decided on their behalf.
+When they want the talk as a PDF or images, follow `skills/exporting-a-beatdeck/SKILL.md`.
 
 ## Hard rules
 

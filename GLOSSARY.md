@@ -28,6 +28,22 @@ _Avoid_: padding, bleed
 Visible text with another element painted on top of it (a card, image, video or shape), so part of it cannot be read. Reported as a warning by the audit.
 _Avoid_: hidden text, overlap (that is text over text)
 
+**Export**:
+A still copy of a talk as files: a PDF or a folder of PNGs, one page per beat, from the beat's settled frame.
+_Avoid_: print, render, slides
+
+**Handout**:
+An export with one page per scene, taken from its last beat.
+_Avoid_: summary, slide deck
+
+**Export loss**:
+What a beat's page cannot keep of what the audience sees live: motion, a live switch, text covered by another element. Reported per page by the export.
+_Avoid_: export error, bug
+
+**Variant**:
+A look of the whole talk the speaker switches live outside the beat, such as a dark or light theme. The export pins one and can export each.
+_Avoid_: mode, setting
+
 **Locale**:
 A language a talk is given in, written as a language code (`en`, `es`). A deck declares its locales; each is built as its own bundle.
 _Avoid_: translation, language pack

@@ -8,7 +8,7 @@
 //   npm run upgrade -- --clean          also remove beatdeck-repo leftovers (showcase, plugin files, old CI)
 //
 // What it touches:
-//   engine   src/beatdeck/, skills/building-a-beatdeck/, scripts/{check-offline,verify,shot,export,lib,upgrade}.mjs,
+//   engine   src/beatdeck/, skills/{building,exporting}-a-beatdeck/, scripts/{check-offline,verify,shot,export,lib,upgrade}.mjs,
 //            themes/neutral.css, themes/light.css → replaced. If you had edited one, your version is kept in
 //            .beatdeck-backup/<time>/ first (engine files are not meant to be edited for one talk).
 //   shared   vite.config.ts, tsconfig.json, src/main.tsx, src/vite-env.d.ts, .gitignore, .gitattributes,
@@ -25,7 +25,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const ENGINE_DIRS = ['src/beatdeck', 'skills/building-a-beatdeck'];
+export const ENGINE_DIRS = ['src/beatdeck', 'skills/building-a-beatdeck', 'skills/exporting-a-beatdeck'];
 export const ENGINE_FILES = ['scripts/build.mjs', 'scripts/check-offline.mjs', 'scripts/verify.mjs', 'scripts/shot.mjs', 'scripts/export.mjs', 'scripts/lib.mjs', 'scripts/upgrade.mjs', 'themes/neutral.css', 'themes/light.css'];
 // shared config: [path in the talk, path in the beatdeck repo]
 export const SHARED = [

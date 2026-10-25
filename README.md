@@ -127,11 +127,20 @@ the scenes, then run `npm run verify` and look at every frame before calling it 
 /plugin install beatdeck@beatdeck
 ```
 
-**Any agent that reads `SKILL.md`**: copy `skills/building-a-beatdeck/` to `~/.claude/skills/` (or your
+**Any agent that reads `SKILL.md`**: copy `skills/building-a-beatdeck/` (and `skills/exporting-a-beatdeck/`) to `~/.claude/skills/` (or your
 agent's skills folder). Inside a scaffolded deck it is already there, and `AGENTS.md` points to it.
 
 Then ask for something like *"Turn talk.pptx into a beatdeck"* or *"Add a scene where the architecture grows
 to three servers"*.
+
+## Exporting
+
+`npm run export` turns the built talk into a PDF with real, selectable text and a folder of PNGs
+(`artifacts/export/`): one page per beat, or `--handout` for one page per scene, `--notes` to print the beat notes
+under each page. Motion cannot go on paper, so the run also lists, per page, what a still page loses (auto beats,
+ambient motion, covered text) and `--strict` makes those warnings fail. A look the speaker switches live, such as a
+dark/light theme, is declared as a variant in `defineDeck`; `--variant=all` exports every one. See
+`skills/exporting-a-beatdeck/`.
 
 ## Themes
 

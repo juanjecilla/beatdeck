@@ -2,7 +2,8 @@
 
 This is a talk built with [beatdeck](https://github.com/borjaperfra/beatdeck): a fixed 1920×1080 React stage
 where one click is one beat. To build or edit the talk, follow `skills/building-a-beatdeck/SKILL.md` (source →
-content audit → beat map → scenes → verification). This file is the short version.
+content audit → beat map → scenes → verification); to hand it out as PDF or images, follow
+`skills/exporting-a-beatdeck/SKILL.md`. This file is the short version.
 
 ## Layout
 
@@ -13,8 +14,8 @@ content audit → beat map → scenes → verification). This file is the short 
 | `docs/` | `CONTENT-AUDIT.md` (source → beats), `RUNBOOK.md` (the day of the talk) | yes |
 | `themes/` | `neutral.css` (default), `light.css` — to brand, copy one to a new file and import that | copy |
 | `src/beatdeck/` | the engine — replaced by `npm run upgrade` | no |
-| `skills/building-a-beatdeck/` | the skill and its references — replaced by `npm run upgrade` | no |
-| `scripts/` | `verify`, `shot`, `upgrade`, `check-offline` — replaced by `npm run upgrade` | no |
+| `skills/building-a-beatdeck/`, `skills/exporting-a-beatdeck/` | the skills and their references — replaced by `npm run upgrade` | no |
+| `scripts/` | `verify`, `shot`, `export`, `upgrade`, `check-offline` — replaced by `npm run upgrade` | no |
 
 Decks import everything from `'beatdeck'`.
 
@@ -26,6 +27,7 @@ npm run shot -- 3 4.2  # quick frames of some beats while designing → artifact
 npm run build          # typecheck + bundle + offline check → dist/
 npm run verify         # every beat forwards/back/from URL, compared, audited → artifacts/verify/contact.png
 npm run present        # production build, opened locally (works offline)
+npm run export         # the built talk as PDF + PNGs, one page per beat → artifacts/export/ (--handout, --notes, --variant=all)
 npm run upgrade        # newer beatdeck engine; never touches deck/ (then npm install && npm run verify)
 ```
 

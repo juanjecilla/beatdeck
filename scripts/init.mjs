@@ -129,7 +129,7 @@ npm run verify       # every beat checked → artifacts/verify/
 npm run upgrade      # bring the engine up to date (never touches deck/)
 \`\`\`
 
-The talk lives in \`deck/\`. See \`AGENTS.md\` and \`skills/building-a-beatdeck/SKILL.md\`.
+The talk lives in \`deck/\`. See \`AGENTS.md\`, \`skills/building-a-beatdeck/SKILL.md\` and, to hand the talk out, \`skills/exporting-a-beatdeck/SKILL.md\`.
 `);
 
 rmSync(p('templates'), { recursive: true, force: true });
