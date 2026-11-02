@@ -7,7 +7,8 @@
  * `[data-audit="off"]`. Returns { errors, warnings, edges, covered, exact } — `edges` are safe-area warnings (text
  * closer than the deck's `audit.safeMargin` to an edge, one per text node and edge); `covered` is text with a painted
  * element on top of it (one per text node); `exact` are the texts that must match the source verbatim
- * (Terminal lines and `[data-exact]` elements).
+ * (Terminal lines and `[data-exact]` elements). `.bd-code` frames (CodeBlock) are audited as objects too: outside the
+ * stage, over the chrome, text drawn over them (their own text is excluded) → errors; closer than `safeMargin` to an edge → `edges`.
  */
 export function auditFrame() {
   const stage = document.querySelector('.stage');
@@ -115,6 +116,29 @@ export function auditFrame() {
     }
   } finally {
     lift.remove();
+  }
+  // code frames (CodeBlock): the frame is one object; its own text is excluded from the text-over-frame test
+  const rectOf = (r) => ({ x: (r.left - sr.left) / k, y: (r.top - sr.top) / k, w: r.width / k, h: (r.height) / k });
+  const hit = (a, c) => Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x) > 0 && Math.min(a.y + a.h, c.y + c.h) - Math.max(a.y, c.y) > 0;
+  const frames = cutOn ? [] : [...stage.querySelectorAll('.bd-code')].filter(visible).map((el) => {
+    const f = rectOf(el.getBoundingClientRect());
+    return { el, ...f, name: JSON.stringify(el.querySelector('.bd-code-file')?.textContent ?? 'code') };
+  });
+  const chrome = frames.length
+    ? [...document.querySelectorAll('[data-bd-chrome] *')].filter((e) => !e.firstElementChild && visible(e)).map((e) => rectOf(e.getBoundingClientRect())).filter((r) => r.w > 1 && r.h > 1)
+    : [];
+  for (const f of frames) {
+    if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
+    else if (chrome.some((c) => hit(f, c))) res.errors.push(`code frame ${f.name} reaches the deck chrome (footer ticks or title): shrink it or use fit`);
+    else if (margin) {
+      for (const [edge, d, m] of [['left', f.x, margin.x], ['right', 1920 - (f.x + f.w), margin.x], ['top', f.y, margin.y], ['bottom', 1080 - (f.y + f.h), margin.y]]) {
+        if (d < m) res.edges.push({ t: `code frame ${f.name}`, edge, d: Math.round(d), m });
+      }
+    }
+    for (const b of boxes) {
+      if (b.n.parentElement.closest('.bd-code') || !hit(f, b)) continue;
+      res.errors.push(`${short(b.t)} overlaps the code frame ${f.name} (move one of them)`);
+    }
   }
   // overlapping text: two different text nodes whose line boxes share > 30% of the smaller one
   const seen = new Set();

@@ -1,9 +1,9 @@
 export interface AuditResult {
-  /** Problems that fail verify: text outside the stage, overlapping text, characters that change under uppercase. */
+  /** Problems that fail verify: text outside the stage, overlapping text, text over a code frame, a code frame outside the stage or over the chrome, characters that change under uppercase. */
   errors: string[];
   /** Text under the 18 px stage minimum. */
   warnings: string[];
-  /** Text closer than `audit.safeMargin` to a stage edge. */
+  /** Text or code frames closer than `audit.safeMargin` to a stage edge. */
   edges: { t: string; edge: 'left' | 'right' | 'top' | 'bottom'; d: number; m: number }[];
   /** Text with a painted element on top of it; `by` is the covering element as `tag.class`. */
   covered: { t: string; by: string }[];
