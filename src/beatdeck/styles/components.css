@@ -7,6 +7,31 @@
 .bd-term-line.cmd { font-weight: 600; }
 .bd-term-line.dim { color: var(--ink-3); }
 .bd-prompt { color: var(--accent); font-weight: 600; }
+/* CodeBlock: a window frame around highlighted code; colours are theme variables (--code-*). */
+.bd-code { background: var(--code-bg); border: 1px solid var(--hair-strong); border-radius: 10px; color: var(--code-plain); }
+.bd-code-bar { display: flex; align-items: center; gap: 22px; height: 54px; padding: 0 24px; border-bottom: 1px solid var(--hair); }
+.bd-code-dots { display: flex; gap: 9px; }
+.bd-code-dots i { width: 13px; height: 13px; border-radius: 50%; background: var(--hair-strong); display: block; }
+.bd-code-file { font-family: var(--font-mono); font-size: 20px; letter-spacing: 0.04em; color: var(--ink-3); white-space: nowrap; }
+.bd-code-body { padding: 26px 40px 30px; color: var(--code-plain); }
+.bd-code .tk-kw { color: var(--code-kw); }
+.bd-code .tk-str { color: var(--code-str); }
+.bd-code .tk-num { color: var(--code-num); }
+.bd-code .tk-com { color: var(--code-com); font-style: italic; }
+.bd-code .tk-doc { color: var(--code-doc); font-style: italic; }
+.bd-code .tk-dtag { color: var(--code-dtag); font-style: italic; font-weight: 600; }
+.bd-code .tk-ann { color: var(--code-ann); }
+.bd-code .tk-fn { color: var(--code-fn); }
+.bd-code .tk-type { color: var(--code-type); }
+.bd-code .tk-prop { color: var(--code-prop); }
+.bd-code .tk-tag { color: var(--code-tag); }
+.bd-code .tk-attr { color: var(--code-attr); }
+.bd-code .tk-prompt { color: var(--accent); font-weight: 700; }
+.bd-code .tk-flag { color: var(--code-flag); }
+.bd-code .tk-var { color: var(--code-var); }
+.bd-code .tk-err { color: var(--code-err); }
+.bd-code .tk-dim { color: var(--ink-3); }
+
 .bd-mk { position: relative; transition: color 400ms; }
 .bd-mk::before {
   content: ''; position: absolute; left: 0.1em; right: 0.1em; bottom: -0.14em; height: 3px; background: var(--accent);

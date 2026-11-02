@@ -2,22 +2,13 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
-## 0.6.1
-- **Releases.** A version bump merged to `main` is a release: the `release` workflow tags `vX.Y.Z` and publishes a
-  GitHub Release with that version's section of this file (`scripts/changelog-section.mjs`).
-- `npm run upgrade` now pulls from `juanjecilla/beatdeck` and defaults to the **newest `vX.Y.Z` tag** (`main` when
-  there is none or offline); `--ref main` still gives the newest code. Talks on 0.6.0 or older still run the old
-  `upgrade.mjs`, which fetches from `borjaperfra/beatdeck`: bootstrap once with the `npx degit
-  juanjecilla/beatdeck/scripts …` command from the README, or `npm run upgrade -- --from <copy>`.
-- `upstream-sync` workflow (weekly): watches `borjaperfra/beatdeck`; new commits become a `sync/upstream` PR, or an
-  `upstream-conflict` issue when they do not merge cleanly. Nothing merges by itself; merge those PRs with a merge
-  commit, not a squash.
-- Audit: `verify` and `shot` warn about **covered text** — a background, image, video or painted SVG shape on top of
-  visible text (3 of 5 sample points along a line). Empty layers, `<svg>`/`<canvas>` boxes, chrome and
-  `data-audit="off"` are exempt; `--strict` makes it fail.
-- `npm run dev` shows an audit badge (bottom-left) with the findings for the beat on screen. It is not bundled in a
-  build, and absent with `?capture=1` and in the presenter window.
-- The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
+## 0.8.0
+- **`CodeBlock`**: syntax-highlighted code or terminal output inside a window frame (title bar, file name), so it reads
+  as its own object on the slide. Languages: `kotlin`, `xml`, `json`, `term` (shell commands + output), `plain`. Same
+  line model as `Terminal` (marks, labels, hidden lines keep their height); text stays character-exact, so
+  `verify --source` still compares it verbatim. `fit={{ x, y }}` shrinks the font so the frame stays above the footer
+  chrome and inside the side margin. Colours are `--code-*` variables in `themes/neutral.css` and `light.css`.
+  `Terminal`'s mark parsing is now the shared `markRanges`.
 
 ## 0.7.2
 - Export tests: `examples/export-fixture/` (four beats: plain, large `box-shadow`, infinite animation, `backdrop-filter`)
@@ -45,6 +36,23 @@ Talk projects update with `npm run upgrade` (see README → Updating a talk).
   `--variant=all` for every combination, each in its own folder) and warns about `<html>` attributes the deck sets
   that are not declared.
 - New dev dependencies: `pdf-lib`, `@hyzyla/pdfium`.
+
+## 0.6.1
+- **Releases.** A version bump merged to `main` is a release: the `release` workflow tags `vX.Y.Z` and publishes a
+  GitHub Release with that version's section of this file (`scripts/changelog-section.mjs`).
+- `npm run upgrade` now pulls from `juanjecilla/beatdeck` and defaults to the **newest `vX.Y.Z` tag** (`main` when
+  there is none or offline); `--ref main` still gives the newest code. Talks on 0.6.0 or older still run the old
+  `upgrade.mjs`, which fetches from `borjaperfra/beatdeck`: bootstrap once with the `npx degit
+  juanjecilla/beatdeck/scripts …` command from the README, or `npm run upgrade -- --from <copy>`.
+- `upstream-sync` workflow (weekly): watches `borjaperfra/beatdeck`; new commits become a `sync/upstream` PR, or an
+  `upstream-conflict` issue when they do not merge cleanly. Nothing merges by itself; merge those PRs with a merge
+  commit, not a squash.
+- Audit: `verify` and `shot` warn about **covered text** — a background, image, video or painted SVG shape on top of
+  visible text (3 of 5 sample points along a line). Empty layers, `<svg>`/`<canvas>` boxes, chrome and
+  `data-audit="off"` are exempt; `--strict` makes it fail.
+- `npm run dev` shows an audit badge (bottom-left) with the findings for the beat on screen. It is not bundled in a
+  build, and absent with `?capture=1` and in the presenter window.
+- The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
 
 ## 0.6.0
 - **Several languages from one deck.** `locales: ['en', 'es']` in `deck.config.ts`, a typed string table per locale in

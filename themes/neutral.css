@@ -21,6 +21,11 @@
   --warning: #ffbd2e;
   --fault: #ff5f56;
 
+  /* code blocks (CodeBlock): a JetBrains-dark flavour; change these to match your brand */
+  --code-bg: #101113; --code-plain: #d7d9dd; --code-kw: #cf8e6d; --code-str: #6aab73; --code-num: #2aacb8;
+  --code-com: #868a91; --code-doc: #8a9a8e; --code-dtag: #6fb28a; --code-ann: #b3ae60; --code-fn: #56a8f5;
+  --code-type: #5fbcb0; --code-prop: #c77dbb; --code-tag: #d5b778; --code-attr: #bcbec4; --code-flag: #2aacb8; --code-var: #c77dbb; --code-err: #ff6b63;
+
   /* operator UI (overview, presenter, debug) */
   --op-accent: var(--accent);
   --op-accent-strong: var(--accent-strong);

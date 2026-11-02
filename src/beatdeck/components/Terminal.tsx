@@ -31,19 +31,24 @@ export interface TermLine {
 
 type Seg = { s: string; m?: TermMark };
 
-function segments(t: string, marks: TermMark[] = []): Seg[] {
+/** Where each mark sits in `t`, in order. Throws when a mark is missing or two marks overlap (shared with `CodeBlock`). */
+export function markRanges(t: string, marks: TermMark[] = [], who = 'Terminal'): { m: TermMark; i: number; j: number }[] {
   const found = marks
     .map((m) => {
       let i = -1;
       for (let k = 0; k <= (m.nth ?? 0); k++) i = t.indexOf(m.text, i + 1);
-      if (i < 0) throw new Error(`Terminal: mark "${m.text}" not found in "${t}"`);
+      if (i < 0) throw new Error(`${who}: mark "${m.text}" not found in "${t}"`);
       return { m, i, j: i + m.text.length };
     })
     .sort((a, b) => a.i - b.i);
+  for (let k = 1; k < found.length; k++) if (found[k].i < found[k - 1].j) throw new Error(`${who}: overlapping marks in "${t}"`);
+  return found;
+}
+
+function segments(t: string, marks: TermMark[] = []): Seg[] {
   const out: Seg[] = [];
   let p = 0;
-  for (const f of found) {
-    if (f.i < p) throw new Error(`Terminal: overlapping marks in "${t}"`);
+  for (const f of markRanges(t, marks)) {
     if (f.i > p) out.push({ s: t.slice(p, f.i) });
     out.push({ s: t.slice(f.i, f.j), m: f.m });
     p = f.j;
