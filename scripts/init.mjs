@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Turns a fresh copy of the beatdeck repo into a clean talk project. Run once, right after degit:
 //
-//   npx degit borjaperfra/beatdeck my-talk && cd my-talk
+//   npx degit juanjecilla/beatdeck my-talk && cd my-talk
 //   npm run init -- --title "My talk" --author "Ada Lovelace" --lang en --theme light [--demo]
 //
 // Removes what belongs to the beatdeck repo, not to a talk (the Kernel Panic showcase and its non-MIT assets,
@@ -51,7 +51,7 @@ const edit = (f, fn) => { if (existsSync(p(f))) writeFileSync(p(f), fn(readFileS
 
 // 1 · what belongs to the beatdeck repo, not to a talk
 // (templates/ is read below, then removed at the end)
-for (const f of ['examples', '.claude-plugin', 'docs/media', 'README.md', 'CHANGELOG.md', '.coderabbit.yaml', '.github/workflows/ci.yml']) rmSync(p(f), { recursive: true, force: true });
+for (const f of ['examples', '.claude-plugin', 'docs/media', 'README.md', 'CHANGELOG.md', '.coderabbit.yaml', '.github/workflows/ci.yml', '.github/workflows/release.yml', '.github/workflows/upstream-sync.yml', 'scripts/changelog-section.mjs', 'tests', 'docs/REGRESSIONS.md']) rmSync(p(f), { recursive: true, force: true });
 
 // 1b · the deck: a blank two-scene starter (title, questions) unless --demo keeps beatdeck's demo
 if (!demo) {
@@ -119,7 +119,7 @@ edit('index.html', (s) => {
 // 5 · a README for the talk
 writeFileSync(p('README.md'), `# ${title ?? name}
 
-${author ? `${author} · ` : ''}built with [beatdeck](https://github.com/borjaperfra/beatdeck).
+${author ? `${author} · ` : ''}built with [beatdeck](https://github.com/juanjecilla/beatdeck).
 
 \`\`\`bash
 npm install
