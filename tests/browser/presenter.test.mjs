@@ -2,7 +2,7 @@
 // StrictMode mounts effects twice; the channel was created once and closed by the first cleanup.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launchBrowser, startServer, sleep } from '../../scripts/lib.mjs';
+import { launchBrowser, startServer } from '../../scripts/lib.mjs';
 
 let srv, browser;
 before(async () => { srv = await startServer({ dev: true, port: 4291 }); browser = await launchBrowser(); });
@@ -14,9 +14,9 @@ test('presenter view mounts on the dev server without errors', async () => {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(`${srv.base}?view=presenter`);
-  await sleep(2000);
+  await page.getByText('resync').waitFor({ timeout: 15000 }); // rendered (fonts may delay mount)
+  await page.waitForTimeout(500); // let an effect-time error surface
   assert.deepEqual(errors, []);
-  assert.ok(await page.locator('text=resync').count(), 'presenter UI rendered');
 });
 
 test('presenter follows the stage and sends commands', async () => {
@@ -26,9 +26,9 @@ test('presenter follows the stage and sends commands', async () => {
   await stage.goto(`${srv.base}#1.1`);
   const presenter = await ctx.newPage();
   await presenter.goto(`${srv.base}?view=presenter`);
-  await sleep(1500);
+  // only press once the presenter says it hears the stage: an earlier key would be lost, not queued
+  await presenter.getByText('stage connected').waitFor({ timeout: 15000 });
   await presenter.bringToFront();
   await presenter.keyboard.press('ArrowRight');
-  await sleep(800);
-  assert.equal(new URL(stage.url()).hash, '#1.2', 'stage moved one beat after a command from the presenter');
+  await stage.waitForFunction(() => location.hash === '#1.2', null, { timeout: 5000 });
 });
