@@ -23,6 +23,7 @@ deck project. The export reads `dist/`, so a stale build exports a stale talk.
 npm run export                     # every beat → artifacts/export/<deck-id>.pdf + png/SS-BB.png + report.json
 npm run export -- --handout        # one page per scene: its last beat
 npm run export -- --notes          # beat notes under each page (handout: the notes of the scene's beats)
+#   notes are printed in Helvetica: a character it lacks (Japanese, say) prints as `?`
 npm run export -- --variant=all    # every declared variant, each in its own folder (see step 4)
 ```
 
@@ -31,7 +32,8 @@ copy and `--handout` for people who read along; add `--notes` only when the spea
 
 ## 3 · Read the loss report
 
-The run prints one line per loss: `<scene>.<beat> ⚠ <what>`. **Errors** (text overlap, text outside the stage) fail
+The run prints one line per loss: `<scene>.<beat> ⚠ <what>`, at most 25 of them. For a long export read the complete
+list in `report.json` (one per variant folder). **Errors** (text overlap, text outside the stage) fail
 the run; **warnings** do not, unless `--strict`. Take each line to one of the cases in
 [`references/export-loss.md`](references/export-loss.md), which gives the cause and the fix for every case.
 
@@ -49,7 +51,9 @@ variants: { theme: { attr: 'data-theme', values: ['dark', 'light'], default: 'da
 
 `attr` is the attribute the deck sets on `<html>`. The export reports any other `<html>` attribute the deck sets
 at load ("declare it in variants"): turn each into a declared variant, or confirm to the speaker that it does not
-change the look. Export the default for the main copy; `--variant=theme=light` or `--variant=all` for the others.
+change the look. Export the default for the main copy; `--variant=theme=light` or `--variant=all` for the others. Every run empties
+its output folder first: a second single-variant run deletes the first copy, so use `--variant=all` for both, or move
+the first output away before exporting the next.
 
 ## 5 · Look at the pages
 

@@ -15,6 +15,7 @@ over time or on a key press is outside it.
 | `<html …> changed after it was pinned` (error) | The deck rewrites a pinned variant on its own. | Stop the deck resetting it after load, or its `values` do not match the attribute it really uses. |
 | `print differs from the screen by N%` (info) | Chromium's print drops or changes something: `backdrop-filter` and `mix-blend-mode` are the usual causes. | The page is an image with an invisible text layer, so it is still searchable. Remove the CSS feature for a vector page, or accept the image. |
 | `text layer: N character(s) outside Latin-1` (info) | The invisible text of an image page covers Latin-1 only. | Search on that page misses those characters; the picture is unaffected. |
+| `--notes` text with characters outside Latin-1 | The notes band uses Helvetica; a character it lacks prints as `?`. | The printed notes lose those characters (the loss report does not list them); keep notes in Latin-1 or read them from the deck. |
 
 ## Not checked (revisit when a talk needs it)
 

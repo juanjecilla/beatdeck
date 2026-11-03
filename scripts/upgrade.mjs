@@ -141,13 +141,14 @@ async function main() {
     if (!existsSync(join(root, f))) { write(f, next); log.added.push(f); continue; }
     const cur = readFileSync(join(root, f));
     if (sha(cur) === sha(next)) continue;
-    if (!manifest || edited(f)) keep(f);
+    // no recorded hash (a file under an engine dir added by a newer beatdeck) counts as edited: back it up first
+    if (!manifest || known[f] === undefined || edited(f)) keep(f);
     write(f, next);
     log.replaced.push(f);
   }
   for (const f of localEngine) {
     if (upEngine.includes(f)) continue;
-    if (!manifest || edited(f)) keep(f);
+    if (!manifest || known[f] === undefined || edited(f)) keep(f);
     if (!dry) rmSync(join(root, f));
     log.removed.push(f);
   }
