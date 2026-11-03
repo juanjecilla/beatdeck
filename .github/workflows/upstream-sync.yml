@@ -36,17 +36,21 @@ jobs:
           ref="${INPUT_REF:-main}"
           git remote add upstream "$UPSTREAM"
           git fetch --tags upstream "$ref"
-          new=$(git rev-list --count HEAD..FETCH_HEAD)
+          # later fetches overwrite FETCH_HEAD: keep the upstream commit
+          upstream_sha=$(git rev-parse FETCH_HEAD)
+          new=$(git rev-list --count "HEAD..${upstream_sha}")
           echo "new=${new}" >> "$GITHUB_OUTPUT"
-          git log --format='- %h %s' HEAD..FETCH_HEAD > commits.md
+          git log --format='- %h %s' "HEAD..${upstream_sha}" > commits.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$new" = "0" ]; then echo "upstream has nothing new"; exit 0; fi
           git fetch origin main
           # While a sync PR is open, build on its branch (reviewers may have pushed fixes) and never force-push.
           # Otherwise start again from main.
-          if gh pr view sync/upstream --json state --jq .state 2>/dev/null | grep -q OPEN \
-             && git fetch origin sync/upstream; then
+          # a failed lookup must stop the job, not look like "no open PR" (that path force-pushes)
+          open_prs=$(gh pr list --head sync/upstream --state open --json number --jq length)
+          if [ "$open_prs" != "0" ]; then
+            git fetch origin sync/upstream
             echo "reuse=true" >> "$GITHUB_OUTPUT"
             git checkout -B sync/upstream origin/sync/upstream
             git merge --no-edit origin/main || { git merge --abort; echo "main conflicts with sync/upstream"; exit 1; }
@@ -54,7 +58,7 @@ jobs:
             echo "reuse=false" >> "$GITHUB_OUTPUT"
             git checkout -B sync/upstream origin/main
           fi
-          if git merge --no-edit FETCH_HEAD -m "sync: merge upstream ${ref}"; then
+          if git merge --no-edit "$upstream_sha" -m "sync: merge upstream ${ref}"; then
             echo "conflict=false" >> "$GITHUB_OUTPUT"
           else
             git diff --name-only --diff-filter=U > conflicts.md
@@ -72,7 +76,7 @@ jobs:
             git push --force origin sync/upstream
           fi
           body="Upstream commits not in this fork (merged cleanly). **Merge with a merge commit, not squash**: a squash hides the upstream commits and they show up as new again."$'\n\n'"$(cat commits.md)"
-          if gh pr view sync/upstream --json state --jq .state 2>/dev/null | grep -q OPEN; then
+          if [ "$(gh pr list --head sync/upstream --state open --json number --jq length)" != "0" ]; then
             gh pr edit sync/upstream --body "$body"
           else
             gh pr create --base main --head sync/upstream --title "sync: upstream borjaperfra/beatdeck" --body "$body"
