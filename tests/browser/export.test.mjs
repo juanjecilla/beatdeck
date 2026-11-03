@@ -36,6 +36,8 @@ test('a plain page is vector with no losses', () => {
 // R9: pdf.js drew CSS box-shadow as dark halos and every such page fell back to an image.
 test('a large box-shadow stays a vector page', () => {
   assert.equal(page('1.2').mode, 'vector');
+  // null would pass `< 1.5` while checking nothing (the print comparison is skipped for ambient motion)
+  assert.equal(typeof page('1.2').printDiff, 'number');
   assert.ok(page('1.2').printDiff < 1.5, `printDiff ${page('1.2').printDiff}`);
 });
 
@@ -47,5 +49,6 @@ test('an infinite animation is reported as ambient motion', () => {
 // R11: ordinary pages differ from the print by <= 0.55 %, backdrop-filter by 5-7 % or more; the threshold is 1.5 %.
 test('backdrop-filter falls back to an image page with its text layer', () => {
   assert.equal(page('1.4').mode, 'raster');
+  assert.equal(typeof page('1.4').printDiff, 'number');
   assert.ok(page('1.4').printDiff > 1.5, `printDiff ${page('1.4').printDiff}`);
 });

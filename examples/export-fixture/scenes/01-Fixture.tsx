@@ -13,7 +13,9 @@ function Fixture_() {
       <div style={{ ...at(on(1)), left: 640, top: 460, fontSize: 96, fontWeight: 600 }}>Shadow card</div>
 
       <style>{'@keyframes fx-slide{from{transform:translateX(0)}to{transform:translateX(900px)}}'}</style>
-      <div style={{ ...at(on(2)), left: 200, top: 300, width: 200, height: 200, background: 'var(--accent)', animation: 'fx-slide 1.2s linear infinite alternate' }} />
+      <div style={{ ...at(on(2)), left: 200, top: 300, width: 200, height: 200, background: 'var(--accent)', animation: 'fx-slide 1.1s linear infinite' }} />
+      {/* a second, independent period: both squares would have to coincide with their start for the export to miss it */}
+      <div style={{ ...at(on(2)), left: 200, top: 540, width: 120, height: 120, background: 'var(--accent)', animation: 'fx-slide 1.7s linear infinite' }} />
       <div style={{ ...at(on(2)), left: 200, top: 700, fontSize: 96, fontWeight: 600 }}>Ambient motion</div>
 
       <div style={{ ...at(on(3)), left: 0, top: 0, width: 1920, height: 1080, background: 'linear-gradient(120deg,#e11d48,#2563eb 50%,#16a34a)' }} />

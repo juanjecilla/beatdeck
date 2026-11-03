@@ -7,5 +7,5 @@ Four beats that each pin one behaviour of `npm run export`, used by `tests/brows
 | --- | --- | --- |
 | 1.1 plain | text on a flat background | vector page, no losses |
 | 1.2 shadow | a large CSS `box-shadow` (pdf.js drew it as dark halos) | stay vector |
-| 1.3 ambient | an infinite CSS animation | report ambient motion |
+| 1.3 ambient | an infinite, non-alternating CSS animation (period 1.1 s: two frames 400 ms apart never coincide) | report ambient motion |
 | 1.4 blur | `backdrop-filter` over a gradient | fall back to an image page |
