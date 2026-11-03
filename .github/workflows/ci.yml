@@ -11,6 +11,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:browser
+
   demo:
     name: demo · build + verify
     runs-on: ubuntu-latest
@@ -57,6 +68,10 @@ jobs:
           grep -q "qrUrl: 'TODO'" deck/deck.config.ts
           test -f reference/README.md && test -f docs/CONTENT-AUDIT.md && test -f .github/workflows/verify.yml
           test ! -e CHANGELOG.md && test ! -e templates && test ! -e .github/workflows/ci.yml
+          # nothing that belongs to the beatdeck repo's own release and test machinery
+          test ! -e .github/workflows/release.yml && test ! -e .github/workflows/upstream-sync.yml
+          test ! -e scripts/changelog-section.mjs && test ! -e tests && test ! -e docs/REGRESSIONS.md
+          node -e "const s=require('./package.json').scripts; if (Object.keys(s).some(k=>k==='test'||k.startsWith('test:'))) { console.error('repo test scripts leaked into the talk'); process.exit(1) }"
           ln -s "$GITHUB_WORKSPACE/node_modules" node_modules
           npm run build
           npm run verify

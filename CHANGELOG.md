@@ -19,6 +19,15 @@ Talk projects update with `npm run upgrade` (see README → Updating a talk).
   build, and absent with `?capture=1` and in the presenter window.
 - The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
 
+## 0.7.1
+- Fix: the presenter window crashed on the dev server (`BroadcastChannel: Channel is closed`): the channel is opened
+  inside the effect, so StrictMode's second mount gets a fresh one.
+- Fix: `npm run upgrade` did nothing when the project was reached through a symlink (entrypoint check compared
+  unresolved and resolved paths).
+- Fix: `init` no longer leaves the release and upstream-sync workflows, `tests/` or the repo's `test` scripts in a talk.
+- Regression suite: `npm test` (pure functions) and `npm run test:browser` (presenter, frame audit), a CI job, and
+  `docs/REGRESSIONS.md` listing every solved error with the test that guards it (or `TODO` when not yet guarded).
+
 ## 0.7.0
 - **`npm run export`**: the talk as a PDF (vector, selectable text) and a folder of PNGs, one page per beat; `--handout`
   one page per scene (its last beat), `--notes` adds the beat notes under each page, `--format=pdf,png`. Each page is
