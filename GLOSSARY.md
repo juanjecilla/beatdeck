@@ -24,6 +24,10 @@ _Avoid_: header, HUD
 The stage minus a margin (default 120 px left/right, 100 px top/bottom) that text should stay inside to read from the back of the room. Chrome is exempt.
 _Avoid_: padding, bleed
 
+**Covered text**:
+Visible text with another element painted on top of it (a card, image, video or shape), so part of it cannot be read. Reported as a warning by the audit.
+_Avoid_: hidden text, overlap (that is text over text)
+
 **Locale**:
 A language a talk is given in, written as a language code (`en`, `es`). A deck declares its locales; each is built as its own bundle.
 _Avoid_: translation, language pack

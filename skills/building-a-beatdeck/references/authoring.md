@@ -42,6 +42,10 @@ export const Name = () => <Scene index={3}><Name_ /></Scene>;
 - Coordinates are stage pixels on 1920×1080. Use generous margins (≥ 120 px left/right, ≥ 100 px top).
   `verify`/`shot` warn when text comes closer than that to an edge (`safeMargin` in `deck.config.ts`, which `index.tsx` passes to `audit.safeMargin`;
   `data-audit="off"` on an element to exempt it).
+- Nothing may be painted over text: `verify`/`shot` warn when a background, image, video or painted SVG shape sits on
+  top of it (covered text). Move the covering element behind the text in the DOM, or mark it `data-audit="off"` if
+  the overlap is the design. Under `npm run dev` a badge at the bottom-left lists what the audit finds on the
+  beat on screen.
 - Huge type is the default voice: statements 150–320 px, numerals 180–260 px, body/meta 22–46 px.
   Nothing smaller than 18 px on stage — it must read from the back of the room.
 - `whiteSpace: 'nowrap'` on statements; break lines explicitly. Check widths in screenshots, not by eye.

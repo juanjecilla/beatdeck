@@ -13,7 +13,7 @@
 // For the full proof, run `npm run verify`.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
-import { auditFrame, builtLocales, contactSheet, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
+import { auditFrame, builtLocales, contactSheet, coveredWarnings, edgeWarnings, launchBrowser, missingFromSource, name, settle, startServer } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const flag = (k) => args.find((a) => a.startsWith(`--${k}=`))?.split('=')[1];
@@ -84,8 +84,8 @@ for (const [s, b] of wanted) {
   const file = `${OUT}/${name(s, b)}.png`;
   await page.screenshot({ path: file });
   shots.push({ file, label: `${s}.${b}` });
-  const { errors: found, warnings: small, edges, exact } = await page.evaluate(auditFrame);
-  const warnings = [...small, ...edgeWarnings(edges)];
+  const { errors: found, warnings: small, edges, covered, exact } = await page.evaluate(auditFrame);
+  const warnings = [...small, ...edgeWarnings(edges), ...coveredWarnings(covered)];
   const issues = [...found, ...(STRICT ? warnings : []), ...(sourceText ? missingFromSource(exact, sourceText).map((e) => `${JSON.stringify(e.t)} is not in ${SOURCE}`) : [])];
   problems += issues.length;
   console.log(`${issues.length ? '✕' : '✓'} ${s}.${b} → ${file}`);
