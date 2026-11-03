@@ -23,7 +23,8 @@ function BeatInfo({ bt }: { bt: BeatDef }) {
 
 /** Separate window (P). Mirrors the stage over BroadcastChannel and sends it commands. Never shown to the audience. */
 export function PresenterView() {
-  const ch = useMemo(() => openChannel(), []);
+  // opened in the effect, not memoised: StrictMode runs effect cleanups (which close the channel) and re-runs them
+  const [ch, setCh] = useState<BroadcastChannel | null>(null);
   const id = deck.def.id;
   const [pos, setPos] = useState<Position | null>(null);
   const [lastSeen, setLastSeen] = useState(0);
@@ -33,6 +34,8 @@ export function PresenterView() {
   const [t0, setT0] = useState<number | null>(getTimerStart(id));
 
   useEffect(() => {
+    const ch = openChannel();
+    setCh(ch);
     if (!ch) return;
     ch.onmessage = (e: MessageEvent<Msg>) => {
       const m = e.data;
@@ -44,8 +47,8 @@ export function PresenterView() {
       }
     };
     ch.postMessage({ type: 'hello' } satisfies Msg);
-    return () => ch.close();
-  }, [ch]);
+    return () => { setCh(null); ch.close(); };
+  }, []);
 
   useEffect(() => {
     const i = setInterval(() => { setNow(Date.now()); setT0(getTimerStart(id)); }, 500);

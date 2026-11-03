@@ -31,6 +31,8 @@ npm run present        # build + local production server
 npm run shot -- 3 4.2  # quick frames of some beats while designing → artifacts/shot/
 npm run verify         # every beat forwards/back/from URL, compared → artifacts/verify/ (contact.png)
 npm run export         # the built talk as PDF + PNGs → artifacts/export/ (--handout, --notes, --variant=all); read skills/exporting-a-beatdeck/SKILL.md
+npm test               # pure-function regression tests (node:test)
+npm run test:browser   # headless-browser regression tests (presenter, audit)
 npm run upgrade        # newer beatdeck engine; never touches deck/ (then npm install && npm run verify)
 npm run example:kernel-panic
 npm run build:i18n && npm run verify:i18n   # the two-locale example (examples/i18n/)
@@ -44,7 +46,8 @@ npm run build:i18n && npm run verify:i18n   # the two-locale example (examples/i
 3. Fixed 1920×1080 stage. Absolute positions. Nothing responsive inside the stage.
 4. Offline: no CDN, remote fonts, APIs or analytics. The build fails otherwise.
 5. Content fidelity: never invent quotes, numbers, logos or URLs. Unknowns are explicit `TODO`s.
-6. Don't call it done before `npm run build` and `npm run verify` pass and you've looked at `artifacts/verify/contact.png`.
+6. Every fixed bug gets a row in `docs/REGRESSIONS.md` and a test that failed before the fix.
+7. Don't call it done before `npm run build` and `npm run verify` pass and you've looked at `artifacts/verify/contact.png`.
 
 ## Reviews
 
