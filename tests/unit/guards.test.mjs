@@ -26,6 +26,8 @@ test('upstream-sync keeps the upstream SHA, never force-pushes over an open sync
   assert.ok(shaCapture >= 0 && laterFetch > shaCapture, 'capture the upstream SHA before the later fetch');
   // a failed lookup must stop the job: the assignment stands alone, with no `|| echo 0` fallback to the force-push path
   assert.match(y, /^[ \t]*open_prs=\$\(gh pr list --head sync\/upstream --state open --json number --jq length\)[ \t]*$/m);
+  assert.doesNotMatch(y, /open_prs=.*\|\|/, 'no fallback on the lookup');
+  assert.equal((y.match(/open_prs=/g) ?? []).length, 1, 'one assignment, so a later one cannot take over the branch');
   assert.match(y, /git merge --no-edit "\$upstream_sha"/);
   assert.doesNotMatch(y, /git merge --no-edit FETCH_HEAD/);
   assert.match(y, /git fetch --no-tags upstream/);
