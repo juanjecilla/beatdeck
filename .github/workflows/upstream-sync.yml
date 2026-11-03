@@ -1,0 +1,76 @@
+name: upstream-sync
+
+# Watches borjaperfra/beatdeck (this repo is a fork). New upstream commits are merged into `sync/upstream` and
+# proposed as a PR; if they conflict with us, an `upstream-conflict` issue lists them for a review instead.
+# Nothing is merged to main automatically.
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: upstream ref to compare (default main)
+        default: main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  UPSTREAM: https://github.com/borjaperfra/beatdeck.git
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main, fetch-depth: 0 }
+      - name: look for upstream changes
+        id: probe
+        env:
+          INPUT_REF: ${{ inputs.upstream_ref }}
+        run: |
+          ref="${INPUT_REF:-main}"
+          git remote add upstream "$UPSTREAM"
+          git fetch --tags upstream "$ref"
+          new=$(git rev-list --count HEAD..FETCH_HEAD)
+          echo "new=${new}" >> "$GITHUB_OUTPUT"
+          git log --format='- %h %s' HEAD..FETCH_HEAD > commits.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$new" = "0" ]; then echo "upstream has nothing new"; exit 0; fi
+          git checkout -B sync/upstream
+          if git merge --no-edit FETCH_HEAD -m "sync: merge upstream ${ref}"; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            git diff --name-only --diff-filter=U > conflicts.md
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: open or update the sync PR
+        if: steps.probe.outputs.new != '0' && steps.probe.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push --force origin sync/upstream
+          body="Upstream commits not in this fork (merged cleanly):"$'\n\n'"$(cat commits.md)"
+          if gh pr view sync/upstream --json state --jq .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit sync/upstream --body "$body"
+          else
+            gh pr create --base main --head sync/upstream --title "sync: upstream borjaperfra/beatdeck" --body "$body"
+          fi
+      - name: report a conflict for review
+        if: steps.probe.outputs.new != '0' && steps.probe.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="Upstream has commits that conflict with this fork. Review and merge by hand (or with an agent)."$'\n\n'"Commits:"$'\n'"$(cat commits.md)"$'\n\n'"Conflicting files:"$'\n'"$(sed 's/^/- /' conflicts.md)"
+          gh label create upstream-conflict --color B60205 --description "upstream changes that do not merge cleanly" 2>/dev/null || true
+          existing=$(gh issue list --label upstream-conflict --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$body"
+          else
+            gh issue create --label upstream-conflict --title "upstream conflicts with this fork" --body "$body"
+          fi
