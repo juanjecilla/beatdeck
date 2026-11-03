@@ -15,8 +15,9 @@ verification). This file is the short version.
 | `examples/kernel-panic/` | a full 47-beat production talk, reference only | no |
 | `examples/i18n/` | a 7-beat deck in two locales (string tables), reference only | no |
 | `skills/building-a-beatdeck/` | the skill + references + `extract_pptx.py` | — |
+| `skills/exporting-a-beatdeck/` | the skill for `npm run export` (PDF/PNG) and its loss report | — |
 | `templates/` | what `init` puts in a talk: `blank/deck/` (default starter), `talk/AGENTS.md`, `talk/ci.yml` | — |
-| `scripts/` | `check-offline.mjs`, `verify.mjs` | — |
+| `scripts/` | `check-offline.mjs`, `verify.mjs`, `export.mjs` | — |
 
 `src/beatdeck/` never imports from `deck/`. Decks import everything from `'beatdeck'`.
 
@@ -29,6 +30,7 @@ npm run build          # typecheck + bundle + offline check → dist/
 npm run present        # build + local production server
 npm run shot -- 3 4.2  # quick frames of some beats while designing → artifacts/shot/
 npm run verify         # every beat forwards/back/from URL, compared → artifacts/verify/ (contact.png)
+npm run export         # the built talk as PDF + PNGs → artifacts/export/ (--handout, --notes, --variant=all); read skills/exporting-a-beatdeck/SKILL.md
 npm run upgrade        # newer beatdeck engine; never touches deck/ (then npm install && npm run verify)
 npm run example:kernel-panic
 npm run build:i18n && npm run verify:i18n   # the two-locale example (examples/i18n/)

@@ -18,6 +18,8 @@ Talk projects update with `npm run upgrade` (see README → Updating a talk).
 - `npm run dev` shows an audit badge (bottom-left) with the findings for the beat on screen. It is not bundled in a
   build, and absent with `?capture=1` and in the presenter window.
 - The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
+
+## 0.7.0
 - **`npm run export`**: the talk as a PDF (vector, selectable text) and a folder of PNGs, one page per beat; `--handout`
   one page per scene (its last beat), `--notes` adds the beat notes under each page, `--format=pdf,png`. Each page is
   checked against the screen with PDFium; one that the print gets wrong becomes an image with an invisible text layer.
