@@ -23,12 +23,13 @@ test('presenter follows the stage and sends commands', async () => {
   // BroadcastChannel only reaches pages of the same browser context
   const ctx = await browser.newContext();
   const stage = await ctx.newPage();
-  await stage.goto(`${srv.base}#1.1`);
+  // scene 2 has no `auto` beat: #1.2 advances itself, which would make the final wait racy
+  await stage.goto(`${srv.base}#2.1`);
   const presenter = await ctx.newPage();
   await presenter.goto(`${srv.base}?view=presenter`);
   // only press once the presenter says it hears the stage: an earlier key would be lost, not queued
   await presenter.getByText('stage connected').waitFor({ timeout: 15000 });
   await presenter.bringToFront();
   await presenter.keyboard.press('ArrowRight');
-  await stage.waitForFunction(() => location.hash === '#1.2', null, { timeout: 5000 });
+  await stage.waitForFunction(() => location.hash === '#2.2', null, { timeout: 5000 });
 });
