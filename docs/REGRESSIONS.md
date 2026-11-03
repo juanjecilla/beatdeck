@@ -25,6 +25,7 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R16 | 0.6.1 | `upgrade` default tag could select a release whose own `upgrade.mjs` pointed at another repo | `latestTag` + the 0.6.1 release carrying the new script | test `tests/unit/upgrade.test.mjs` (`latestTag`) |
 | R17 | 0.7.0 | one page that failed to capture crashed the export report (`undefined.toFixed`): no `report.json`, remaining variants not run | failed-capture result had no `printDiff` → `printDiff: null`, report treats `== null` | TODO (needs an export fixture deck whose capture fails) |
 | R18 | 0.7.1 | a new talk inherited `release.yml`, `upstream-sync.yml`, `tests/` and the repo's `test` scripts | `init` removes them; `upgrade` never adds `test*` scripts | CI `scaffold` job asserts it |
+| R19 | 0.7.0 | `upgrade` overwrote or removed an engine file it had no recorded hash for (a dir added by a newer beatdeck) without a backup | no hash counted as unedited → counts as edited | test `tests/unit/upgrade.test.mjs` |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.

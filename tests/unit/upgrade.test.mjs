@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync, readFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { SOURCE_REPO, latestTag, forTalk, writeManifest, ENGINE_FILES } from '../../scripts/upgrade.mjs';
@@ -65,4 +65,25 @@ test('upgrade runs when the talk is reached through a symlink', () => {
   const r = upgradeIn('my-old-talk', { viaSymlink: true });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /dry run/);
+});
+
+// A talk that has a manifest but no recorded hash for a file under an engine dir (a dir a newer beatdeck added)
+// must get a backup of that file before it is overwritten.
+test('upgrade backs up an engine file it has no recorded hash for before overwriting it', () => {
+  const real = mkdtempSync(join(realpathSync(tmpdir()), 'bd-unrecorded-'));
+  try {
+    mkdirSync(join(real, 'scripts'));
+    cpSync(join(repo, 'scripts/upgrade.mjs'), join(real, 'scripts/upgrade.mjs'));
+    writeFileSync(join(real, 'package.json'), JSON.stringify({ name: 'my-talk', version: '0.0.1', scripts: {}, dependencies: {}, devDependencies: {} }));
+    writeFileSync(join(real, '.beatdeck.json'), JSON.stringify({ beatdeck: '0.6.0', ref: 'main', updated: '2026-01-01', files: {} }));
+    const mine = 'skills/exporting-a-beatdeck/SKILL.md';
+    mkdirSync(join(real, 'skills/exporting-a-beatdeck'), { recursive: true });
+    writeFileSync(join(real, mine), 'my own notes, not beatdeck\'s');
+    const r = spawnSync(process.execPath, [join(real, 'scripts/upgrade.mjs'), '--from', repo], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    const backups = join(real, '.beatdeck-backup');
+    const stamp = readdirSync(backups)[0];
+    assert.equal(readFileSync(join(backups, stamp, mine), 'utf8'), 'my own notes, not beatdeck\'s');
+    assert.notEqual(readFileSync(join(real, mine), 'utf8'), 'my own notes, not beatdeck\'s', 'then replaced by beatdeck\'s');
+  } finally { rmSync(real, { recursive: true, force: true }); }
 });
