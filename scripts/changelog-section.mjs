@@ -2,8 +2,7 @@
 // Prints the CHANGELOG.md section of one version, for the GitHub Release notes.
 //   node scripts/changelog-section.mjs 0.7.0 [CHANGELOG.md]
 // Exits 1 when the version has no section, so a release never goes out with empty notes.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /** The text under `## <version>` up to the next `## ` heading, trimmed; null if there is no such section. */
@@ -18,7 +17,7 @@ export function changelogSection(markdown, version) {
   return body || null;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const [version, file = 'CHANGELOG.md'] = process.argv.slice(2);
   if (!version) { console.error('usage: changelog-section.mjs <version> [CHANGELOG.md]'); process.exit(2); }
   const body = changelogSection(readFileSync(file, 'utf8'), version);

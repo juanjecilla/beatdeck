@@ -21,7 +21,7 @@
 // you changed.
 import { createHash } from 'node:crypto';
 import { execSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,7 +52,7 @@ export const SHARED = [
 export const SHARED_FILES = SHARED.map(([t]) => t);
 const MANIFEST = '.beatdeck.json';
 // scripts that belong to the beatdeck repo itself, never to a talk
-const REPO_ONLY_SCRIPT = (k) => k.includes('kernel-panic') || k.endsWith(':i18n') || k === 'i18n' || k === 'init';
+const REPO_ONLY_SCRIPT = (k) => k.includes('kernel-panic') || k.endsWith(':i18n') || k === 'i18n' || k === 'init' || k === 'test' || k.startsWith('test:');
 // engine scripts whose old default value is replaced by the new one (an edited script is left alone)
 const PREVIOUS_SCRIPTS = {
   build: ['tsc --noEmit -p . && vite build && node scripts/check-offline.mjs dist deck'],
@@ -218,4 +218,5 @@ async function main() {
   console.log(dry ? '  nothing written.' : '  next: npm install && npm run build && npm run verify');
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) await main();
+// real paths on both sides: argv[1] keeps a symlinked project path, import.meta.url is already resolved
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) await main();

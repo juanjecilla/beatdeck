@@ -23,6 +23,8 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R14 | 0.6.1 | a release tag without a GitHub Release could never be completed on rerun | `release.yml` checked the tag only → tag and Release checked apart; empty changelog section refused | test `tests/unit/changelog-section.test.mjs` (notes); the workflow itself is exercised by its first run |
 | R15 | 0.6.1 | `upstream-sync` merged the wrong commit (a later `git fetch` overwrote `FETCH_HEAD`) and could force-push over reviewers' commits | upstream SHA saved right after the fetch; no force-push while a sync PR is open | TODO (workflow; needs a dispatch run against a throwaway upstream) |
 | R16 | 0.6.1 | `upgrade` default tag could select a release whose own `upgrade.mjs` pointed at another repo | `latestTag` + the 0.6.1 release carrying the new script | test `tests/unit/upgrade.test.mjs` (`latestTag`) |
+| R17 | 0.7.0 | one page that failed to capture crashed the export report (`undefined.toFixed`): no `report.json`, remaining variants not run | failed-capture result had no `printDiff` → `printDiff: null`, report treats `== null` | TODO (needs an export fixture deck whose capture fails) |
+| R18 | 0.7.1 | a new talk inherited `release.yml`, `upstream-sync.yml`, `tests/` and the repo's `test` scripts | `init` removes them; `upgrade` never adds `test*` scripts | CI `scaffold` job asserts it |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.
