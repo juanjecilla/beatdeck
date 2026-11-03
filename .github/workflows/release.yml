@@ -25,13 +25,16 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           tag="v${version}"
-          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
-            echo "${tag} already exists, nothing to release"
+          if ! git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "${tag}" -m "beatdeck ${version}"
+            git push origin "${tag}"
+          fi
+          # the tag may exist without a Release (an earlier run died between the two steps): check them apart
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            echo "${tag} already released, nothing to do"
             exit 0
           fi
           node scripts/changelog-section.mjs "${version}" > notes.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${tag}" -m "beatdeck ${version}"
-          git push origin "${tag}"
           gh release create "${tag}" --title "beatdeck ${version}" --notes-file notes.md --verify-tag

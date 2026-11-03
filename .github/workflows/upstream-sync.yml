@@ -31,6 +31,7 @@ jobs:
         id: probe
         env:
           INPUT_REF: ${{ inputs.upstream_ref }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           ref="${INPUT_REF:-main}"
           git remote add upstream "$UPSTREAM"
@@ -41,7 +42,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$new" = "0" ]; then echo "upstream has nothing new"; exit 0; fi
-          git checkout -B sync/upstream
+          git fetch origin main
+          # While a sync PR is open, build on its branch (reviewers may have pushed fixes) and never force-push.
+          # Otherwise start again from main.
+          if gh pr view sync/upstream --json state --jq .state 2>/dev/null | grep -q OPEN \
+             && git fetch origin sync/upstream; then
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            git checkout -B sync/upstream origin/sync/upstream
+            git merge --no-edit origin/main || { git merge --abort; echo "main conflicts with sync/upstream"; exit 1; }
+          else
+            echo "reuse=false" >> "$GITHUB_OUTPUT"
+            git checkout -B sync/upstream origin/main
+          fi
           if git merge --no-edit FETCH_HEAD -m "sync: merge upstream ${ref}"; then
             echo "conflict=false" >> "$GITHUB_OUTPUT"
           else
@@ -54,8 +66,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git push --force origin sync/upstream
-          body="Upstream commits not in this fork (merged cleanly):"$'\n\n'"$(cat commits.md)"
+          if [ "${{ steps.probe.outputs.reuse }}" = "true" ]; then
+            git push origin sync/upstream
+          else
+            git push --force origin sync/upstream
+          fi
+          body="Upstream commits not in this fork (merged cleanly). **Merge with a merge commit, not squash**: a squash hides the upstream commits and they show up as new again."$'\n\n'"$(cat commits.md)"
           if gh pr view sync/upstream --json state --jq .state 2>/dev/null | grep -q OPEN; then
             gh pr edit sync/upstream --body "$body"
           else
