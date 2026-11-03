@@ -1,0 +1,48 @@
+name: release
+
+# A version bump merged to main is a release: tag vX.Y.Z + GitHub Release with that version's CHANGELOG section.
+# Talks pick it up with `npm run upgrade` (newest tag).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # a manual dispatch from another branch must not tag unmerged code
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: tag and release if this version has none
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v${version}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            # tag exists: if its Release is missing (an earlier run died between the two steps), publish it with the
+            # notes of the TAGGED commit, not of whatever main says now
+            if gh release view "${tag}" >/dev/null 2>&1; then
+              echo "${tag} already released, nothing to do"
+              exit 0
+            fi
+            git fetch --no-tags origin "refs/tags/${tag}:refs/tags/${tag}"
+            git show "${tag}:CHANGELOG.md" > tagged-changelog.md
+            node scripts/changelog-section.mjs "${version}" tagged-changelog.md > notes.md
+          else
+            # validate the notes BEFORE the tag exists: a tag without notes would still be what `upgrade` selects
+            node scripts/changelog-section.mjs "${version}" > notes.md
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "${tag}" -m "beatdeck ${version}"
+            git push origin "${tag}"
+          fi
+          gh release create "${tag}" --title "beatdeck ${version}" --notes-file notes.md --verify-tag

@@ -2,7 +2,16 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
-## Unreleased
+## 0.6.1
+- **Releases.** A version bump merged to `main` is a release: the `release` workflow tags `vX.Y.Z` and publishes a
+  GitHub Release with that version's section of this file (`scripts/changelog-section.mjs`).
+- `npm run upgrade` now pulls from `juanjecilla/beatdeck` and defaults to the **newest `vX.Y.Z` tag** (`main` when
+  there is none or offline); `--ref main` still gives the newest code. Talks on 0.6.0 or older still run the old
+  `upgrade.mjs`, which fetches from `borjaperfra/beatdeck`: bootstrap once with the `npx degit
+  juanjecilla/beatdeck/scripts …` command from the README, or `npm run upgrade -- --from <copy>`.
+- `upstream-sync` workflow (weekly): watches `borjaperfra/beatdeck`; new commits become a `sync/upstream` PR, or an
+  `upstream-conflict` issue when they do not merge cleanly. Nothing merges by itself; merge those PRs with a merge
+  commit, not a squash.
 - Audit: `verify` and `shot` warn about **covered text** — a background, image, video or painted SVG shape on top of
   visible text (3 of 5 sample points along a line). Empty layers, `<svg>`/`<canvas>` boxes, chrome and
   `data-audit="off"` are exempt; `--strict` makes it fail.

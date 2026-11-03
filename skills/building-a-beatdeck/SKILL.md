@@ -20,7 +20,7 @@ else (`deck/`, `src/`, `npm run …`) is relative to the deck project.
 If the working directory has no `src/beatdeck/`, scaffold one, clean it and install:
 
 ```bash
-npx degit borjaperfra/beatdeck my-talk && cd my-talk
+npx degit juanjecilla/beatdeck my-talk && cd my-talk
 npm run init -- --title "<title>" --author "<speaker>" --lang <en|es|…> [--theme light] [--demo]
 npm install
 ```
@@ -36,7 +36,7 @@ It also resets the demo's `qrUrl` to `TODO` and clears its tagline: set the real
 
 Then read `AGENTS.md`. The demo deck (on GitHub in `deck/`, or locally with `init --demo`) is the reference
 implementation of every pattern below. `init` removes the heavier example from your project; read it on GitHub when you need it:
-https://github.com/borjaperfra/beatdeck/tree/main/examples/kernel-panic — a 47-beat production talk. Look at
+https://github.com/juanjecilla/beatdeck/tree/main/examples/kernel-panic — a 47-beat production talk. Look at
 `index.tsx` (custom chrome, `isCut` + `Overlay` for a cut to black), `deck/timeline.ts` (every kind of automatic
 beat), `architecture/` (one SVG world spanning several scenes) and `simulation/` (a Canvas 2D particle layer).
 

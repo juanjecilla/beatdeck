@@ -1,8 +1,8 @@
 # beatdeck
 
-[![ci](https://github.com/borjaperfra/beatdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/borjaperfra/beatdeck/actions/workflows/ci.yml)
+[![ci](https://github.com/juanjecilla/beatdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/juanjecilla/beatdeck/actions/workflows/ci.yml)
 
-**Try it:** [the demo deck](https://borjaperfra.github.io/beatdeck/) · [the Kernel Panic showcase](https://borjaperfra.github.io/beatdeck/kernel-panic/)
+**Try it:** [the demo deck](https://juanjecilla.github.io/beatdeck/) · [the Kernel Panic showcase](https://juanjecilla.github.io/beatdeck/kernel-panic/)
 — click or → to advance, O for the overview, P for the presenter window.
 
 **Talks as beats, not slides.** A fixed 1920×1080 React stage where one click is one beat. Motion is
@@ -13,7 +13,7 @@ with you.
 ![The demo deck: title](docs/media/demo-title.jpg)
 
 ```bash
-npx degit borjaperfra/beatdeck my-talk && cd my-talk
+npx degit juanjecilla/beatdeck my-talk && cd my-talk
 npm run init -- --title "My talk" --author "Your Name" --lang en   # --theme light for bright rooms, --demo to keep the demo
 npm install
 npm run dev          # http://127.0.0.1:5173
@@ -101,11 +101,15 @@ dependencies and adds new scripts. It never touches `deck/`, `index.html` or `do
 are backed up to `.beatdeck-backup/`; shared config you edited (`vite.config.ts`, `tsconfig.json`, …) is left as
 is, with the new version beside it as `*.beatdeck-new`. `.beatdeck.json` records the version.
 
+`npm run upgrade` takes the newest release (`vX.Y.Z` tag) of this repo; `-- --ref main` takes the newest code and
+`-- --ref v0.7.0` pins one. Releases are cut by the `release` workflow when `package.json`'s version changes on
+`main` (see [CHANGELOG](CHANGELOG.md)).
+
 Talks created before `upgrade` existed (≤ 0.3.0) bootstrap it once (`--clean` also removes what early copies
 carried over from this repo: the showcase and its non-MIT assets, the plugin files, beatdeck's CI):
 
 ```bash
-npx degit borjaperfra/beatdeck/scripts .beatdeck-tmp && node .beatdeck-tmp/upgrade.mjs --clean && rm -rf .beatdeck-tmp
+npx degit juanjecilla/beatdeck/scripts .beatdeck-tmp && node .beatdeck-tmp/upgrade.mjs --clean && rm -rf .beatdeck-tmp
 ```
 
 ## Keys
@@ -123,7 +127,7 @@ the scenes, then run `npm run verify` and look at every frame before calling it 
 **Claude Code** (plugin):
 
 ```
-/plugin marketplace add borjaperfra/beatdeck
+/plugin marketplace add juanjecilla/beatdeck
 /plugin install beatdeck@beatdeck
 ```
 

@@ -1,13 +1,13 @@
 {
   "name": "beatdeck",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Talks as beats, not slides: a fixed 1920×1080 React stage where one click is one beat. Offline, deterministic, with presenter view.",
   "license": "MIT",
   "author": "Borja Pérez Francés",
   "repository": {
     "type": "git",
-    "url": "https://github.com/borjaperfra/beatdeck.git"
+    "url": "https://github.com/juanjecilla/beatdeck.git"
   },
   "type": "module",
   "scripts": {

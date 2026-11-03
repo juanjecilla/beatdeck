@@ -1,6 +1,6 @@
 # Agent guide
 
-This is a talk built with [beatdeck](https://github.com/borjaperfra/beatdeck): a fixed 1920×1080 React stage
+This is a talk built with [beatdeck](https://github.com/juanjecilla/beatdeck): a fixed 1920×1080 React stage
 where one click is one beat. To build or edit the talk, follow `skills/building-a-beatdeck/SKILL.md` (source →
 content audit → beat map → scenes → verification). This file is the short version.
 

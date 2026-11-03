@@ -1,0 +1,96 @@
+name: upstream-sync
+
+# Watches borjaperfra/beatdeck (this repo is a fork). New upstream commits are merged into `sync/upstream` and
+# proposed as a PR; if they conflict with us, an `upstream-conflict` issue lists them for a review instead.
+# Nothing is merged to main automatically.
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: upstream ref to compare (default main)
+        default: main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  UPSTREAM: https://github.com/borjaperfra/beatdeck.git
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main, fetch-depth: 0 }
+      - name: look for upstream changes
+        id: probe
+        env:
+          INPUT_REF: ${{ inputs.upstream_ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref="${INPUT_REF:-main}"
+          git remote add upstream "$UPSTREAM"
+          git fetch --no-tags upstream "$ref"
+          # later fetches overwrite FETCH_HEAD: keep the upstream commit
+          upstream_sha=$(git rev-parse FETCH_HEAD)
+          new=$(git rev-list --count "HEAD..${upstream_sha}")
+          echo "new=${new}" >> "$GITHUB_OUTPUT"
+          git log --format='- %h %s' "HEAD..${upstream_sha}" > commits.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$new" = "0" ]; then echo "upstream has nothing new"; exit 0; fi
+          git fetch origin main
+          # While a sync PR is open, build on its branch (reviewers may have pushed fixes) and never force-push.
+          # Otherwise start again from main.
+          # a failed lookup must stop the job, not look like "no open PR" (that path force-pushes)
+          open_prs=$(gh pr list --head sync/upstream --state open --json number --jq length)
+          if [ "$open_prs" != "0" ]; then
+            git fetch origin sync/upstream
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            git checkout -B sync/upstream origin/sync/upstream
+            git merge --no-edit origin/main || { git merge --abort; echo "main conflicts with sync/upstream"; exit 1; }
+          else
+            echo "reuse=false" >> "$GITHUB_OUTPUT"
+            git checkout -B sync/upstream origin/main
+          fi
+          if git merge --no-edit "$upstream_sha" -m "sync: merge upstream ${ref}"; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            git diff --name-only --diff-filter=U > conflicts.md
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: open or update the sync PR
+        if: steps.probe.outputs.new != '0' && steps.probe.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.probe.outputs.reuse }}" = "true" ]; then
+            git push origin sync/upstream
+          else
+            git push --force origin sync/upstream
+          fi
+          body="Upstream commits not in this fork (merged cleanly). **Merge with a merge commit, not squash**: a squash hides the upstream commits and they show up as new again."$'\n\n'"$(cat commits.md)"
+          if [ "$(gh pr list --head sync/upstream --state open --json number --jq length)" != "0" ]; then
+            gh pr edit sync/upstream --body "$body"
+          else
+            gh pr create --base main --head sync/upstream --title "sync: upstream borjaperfra/beatdeck" --body "$body"
+          fi
+      - name: report a conflict for review
+        if: steps.probe.outputs.new != '0' && steps.probe.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="Upstream has commits that conflict with this fork. Review and merge by hand (or with an agent)."$'\n\n'"Commits:"$'\n'"$(cat commits.md)"$'\n\n'"Conflicting files:"$'\n'"$(sed 's/^/- /' conflicts.md)"
+          gh label create upstream-conflict --color B60205 --description "upstream changes that do not merge cleanly" 2>/dev/null || true
+          existing=$(gh issue list --label upstream-conflict --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$body"
+          else
+            gh issue create --label upstream-conflict --title "upstream conflicts with this fork" --body "$body"
+          fi

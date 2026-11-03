@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Brings a talk project up to date with beatdeck, without touching the talk.
 //
-//   npm run upgrade                     latest beatdeck (main)
+//   npm run upgrade                     latest released beatdeck (newest vX.Y.Z tag; main if there is none)
+//   npm run upgrade -- --ref main       the newest code, released or not
 //   npm run upgrade -- --ref v0.3.0     a tag, branch or commit
 //   npm run upgrade -- --from ../beatdeck   a local copy instead of GitHub
 //   npm run upgrade -- --dry-run        show what would change
@@ -24,6 +25,21 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFile
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+/** Where talks get their engine from. */
+export const SOURCE_REPO = 'juanjecilla/beatdeck';
+
+/** Newest vX.Y.Z tag in `git ls-remote --tags` output (prereleases and non-version tags ignored), or null. */
+export function latestTag(lsRemote) {
+  const versions = [];
+  for (const line of String(lsRemote).split('\n')) {
+    const m = line.match(/refs\/tags\/v(\d+)\.(\d+)\.(\d+)(\^\{\})?\s*$/);
+    if (m) versions.push([+m[1], +m[2], +m[3]]);
+  }
+  if (!versions.length) return null;
+  versions.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  return 'v' + versions[versions.length - 1].join('.');
+}
 
 export const ENGINE_DIRS = ['src/beatdeck', 'skills/building-a-beatdeck'];
 export const ENGINE_FILES = ['scripts/build.mjs', 'scripts/check-offline.mjs', 'scripts/verify.mjs', 'scripts/shot.mjs', 'scripts/export.mjs', 'scripts/lib.mjs', 'scripts/upgrade.mjs', 'themes/neutral.css', 'themes/light.css'];
@@ -79,8 +95,12 @@ async function main() {
   const argv = process.argv.slice(2);
   const arg = (k) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : undefined; };
   const dry = argv.includes('--dry-run');
-  const ref = arg('ref') ?? 'main';
   const from = arg('from');
+  let ref = arg('ref');
+  if (!ref && !from) {
+    try { ref = latestTag(execSync(`git ls-remote --tags https://github.com/${SOURCE_REPO}.git`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })); } catch { /* offline or no git: fall back */ }
+  }
+  ref ??= 'main';
 
   // the beatdeck repo itself (talks copied before `init` existed also have .claude-plugin/, but their own name)
   const ownName = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).name;
@@ -96,8 +116,8 @@ async function main() {
   if (!src) {
     tmp = mkdtempSync(join(tmpdir(), 'beatdeck-'));
     src = join(tmp, 'b');
-    console.log(`… fetching borjaperfra/beatdeck#${ref}`);
-    execSync(`npx -y degit borjaperfra/beatdeck#${ref} "${src}"`, { stdio: 'inherit' });
+    console.log(`… fetching ${SOURCE_REPO}#${ref}`);
+    execSync(`npx -y degit ${SOURCE_REPO}#${ref} "${src}"`, { stdio: 'inherit' });
   }
   if (!existsSync(join(src, 'src/beatdeck'))) { console.error(`upgrade: ${src} is not a beatdeck copy`); process.exit(1); }
   const upPkg = JSON.parse(readFileSync(join(src, 'package.json'), 'utf8'));
