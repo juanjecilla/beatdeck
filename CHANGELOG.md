@@ -19,6 +19,12 @@ Talk projects update with `npm run upgrade` (see README → Updating a talk).
   build, and absent with `?capture=1` and in the presenter window.
 - The frame audit moved to `src/beatdeck/audit.js` (shared by the scripts and the badge).
 
+## 0.7.2
+- Export tests: `examples/export-fixture/` (four beats: plain, large `box-shadow`, infinite animation, `backdrop-filter`)
+  is built and exported by `npm run test:browser`; it pins vector pages, the ambient-motion warning and the image
+  fallback threshold. Static guards for the release and upstream-sync workflows and for `cpSync`.
+- `scripts/lib.mjs`: `failedPage` and `reportPage` (the export report row, tested).
+
 ## 0.7.1
 - Fix: the presenter window crashed on the dev server (`BroadcastChannel: Channel is closed`): the channel is opened
   inside the effect, so StrictMode's second mount gets a fresh one.

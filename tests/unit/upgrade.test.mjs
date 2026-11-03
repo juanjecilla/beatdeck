@@ -87,3 +87,21 @@ test('upgrade backs up an engine file it has no recorded hash for before overwri
     assert.notEqual(readFileSync(join(real, mine), 'utf8'), 'my own notes, not beatdeck\'s', 'then replaced by beatdeck\'s');
   } finally { rmSync(real, { recursive: true, force: true }); }
 });
+
+// R6: the old default `build` script is replaced by the new one; a script the talk edited is left alone.
+function upgradeScripts(build) {
+  const real = mkdtempSync(join(realpathSync(tmpdir()), 'bd-scripts-'));
+  try {
+    mkdirSync(join(real, 'scripts'));
+    cpSync(join(repo, 'scripts/upgrade.mjs'), join(real, 'scripts/upgrade.mjs'));
+    writeFileSync(join(real, 'package.json'), JSON.stringify({ name: 'my-talk', version: '0.0.1', scripts: { build }, dependencies: {}, devDependencies: {} }));
+    const r = spawnSync(process.execPath, [join(real, 'scripts/upgrade.mjs'), '--from', repo], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return JSON.parse(readFileSync(join(real, 'package.json'), 'utf8')).scripts.build;
+  } finally { rmSync(real, { recursive: true, force: true }); }
+}
+const repoBuild = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).scripts.build;
+test('upgrade replaces the previous default build script', () => {
+  assert.equal(upgradeScripts('tsc --noEmit -p . && vite build && node scripts/check-offline.mjs dist deck'), repoBuild);
+});
+test('upgrade leaves an edited build script alone', () => assert.equal(upgradeScripts('my own build'), 'my own build'));

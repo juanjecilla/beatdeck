@@ -189,3 +189,9 @@ export function missingFromSource(entries, md) {
   const prose = proseOf(md);
   return entries.filter(({ t, term }) => (term ? !raw.includes(t) : !prose.includes(t.replace(/\s+/g, ' ').trim())));
 }
+
+/** The result recorded for a page that could not be captured (every field the report reads is present). */
+export const failedPage = ([s, b]) => ({ s, b, shot: null, pdf: null, mode: 'vector', runs: null, printDiff: null, losses: [{ level: 'error', text: 'the page could not be captured' }] });
+
+/** One page of report.json. `printDiff` is null when the page was not compared (ambient motion, failed capture). */
+export const reportPage = (r) => ({ page: `${r.s}.${r.b}`, mode: r.mode, printDiff: r.printDiff == null ? null : +r.printDiff.toFixed(2), losses: r.losses });

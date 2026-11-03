@@ -14,6 +14,8 @@ verification). This file is the short version.
 | `src/beatdeck/` | the engine (state, navigation, presenter, overview, debug, stage) | only for generic changes |
 | `examples/kernel-panic/` | a full 47-beat production talk, reference only | no |
 | `examples/i18n/` | a 7-beat deck in two locales (string tables), reference only | no |
+| `examples/export-fixture/` | 4 beats that pin export behaviour for the tests, reference only | no |
+| `tests/` | `unit/` (node:test), `browser/` (headless Chromium); every fixed bug has a row in `docs/REGRESSIONS.md` | yes |
 | `skills/building-a-beatdeck/` | the skill + references + `extract_pptx.py` | — |
 | `skills/exporting-a-beatdeck/` | the skill for `npm run export` (PDF/PNG) and its loss report | — |
 | `templates/` | what `init` puts in a talk: `blank/deck/` (default starter), `talk/AGENTS.md`, `talk/ci.yml` | — |
