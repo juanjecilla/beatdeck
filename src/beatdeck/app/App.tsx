@@ -55,6 +55,9 @@ export function App({ def }: { def: DeckDefinition<any> }) {
         beats: deck.scenes.map((s) => s.beats.map((b) => !!b.auto)),
         tolerance: deck.scenes.map((s) => s.beats.map((b) => b.tolerance ?? null)),
         locale: LOCALE,
+        meta: { id: def.id, title: def.title, lang: def.lang ?? null },
+        scenes: deck.scenes.map((s) => ({ id: s.id, title: s.title, beats: s.beats.map((b) => ({ name: b.name, note: b.note ?? '' })) })),
+        variants: def.variants ?? {},
         qrUrl: qrConfigured(def.qrUrl) ? def.qrUrl : null,
         audit: {
           safeMargin: def.audit?.safeMargin === false ? null : { x: def.audit?.safeMargin?.x ?? 120, y: def.audit?.safeMargin?.y ?? 100 },
