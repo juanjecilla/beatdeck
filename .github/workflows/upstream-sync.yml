@@ -35,7 +35,7 @@ jobs:
         run: |
           ref="${INPUT_REF:-main}"
           git remote add upstream "$UPSTREAM"
-          git fetch --tags upstream "$ref"
+          git fetch --no-tags upstream "$ref"
           # later fetches overwrite FETCH_HEAD: keep the upstream commit
           upstream_sha=$(git rev-parse FETCH_HEAD)
           new=$(git rev-list --count "HEAD..${upstream_sha}")
