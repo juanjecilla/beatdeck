@@ -2,6 +2,13 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
+## 0.8.1
+- Audit: `.bd-code` frames (`CodeBlock`) are checked as objects. Errors: text drawn over a frame (the frame's own text
+  excluded), a frame outside the stage or reaching the deck chrome (footer ticks, title). Frames closer than
+  `safeMargin` to an edge show up with the safe-area warnings.
+- Tests: the frame audit is covered by `tests/browser/audit.test.mjs` (text over a frame, outside the stage, reaching the
+  chrome, near an edge).
+
 ## 0.8.0
 - **`CodeBlock`**: syntax-highlighted code or terminal output inside a window frame (title bar, file name), so it reads
   as its own object on the slide. Languages: `kotlin`, `xml`, `json`, `term` (shell commands + output), `plain`. Same
