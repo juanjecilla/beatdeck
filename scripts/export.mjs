@@ -26,7 +26,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PDFiumLibrary } from '@hyzyla/pdfium';
 import { PDFDocument, StandardFonts, TextRenderingMode, popGraphicsState, pushGraphicsState, rgb, setTextRenderingMode } from 'pdf-lib';
-import { auditFrame, builtLocales, coveredWarnings, imageDiff, imageDiffRgba, launchBrowser, name, settle as settleOn, sleep, startServer, textRuns } from './lib.mjs';
+import { auditFrame, builtLocales, coveredWarnings, failedPage, imageDiff, imageDiffRgba, launchBrowser, name, reportPage, settle as settleOn, sleep, startServer, textRuns } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith('--'));
@@ -277,7 +277,7 @@ for (const combo of combos) {
         results[i] = await capture(w.page, w.pairs, p);
       } catch (e) {
         errors.push(`[export] ${p.join('.')}: ${e.message.split('\n')[0]}`);
-        results[i] = { s: p[0], b: p[1], shot: null, pdf: null, mode: 'vector', runs: null, printDiff: null, losses: [{ level: 'error', text: 'the page could not be captured' }] };
+        results[i] = failedPage(p);
       }
     }
   }));
@@ -292,7 +292,7 @@ for (const combo of combos) {
   }
   const report = {
     deck: meta, variant: Object.fromEntries(names.map((n) => [n, combo[n]])), handout: HANDOUT, notes: NOTES, file,
-    pages: results.map((r) => ({ page: `${r.s}.${r.b}`, mode: r.mode, printDiff: r.printDiff == null ? null : +r.printDiff.toFixed(2), losses: r.losses })),
+    pages: results.map(reportPage),
     runtime: undeclared,
   };
   writeFileSync(join(dir, 'report.json'), JSON.stringify(report, null, 2));
