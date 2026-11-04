@@ -154,13 +154,6 @@ function outputLine(line: string, st: { err: boolean }): Tok[] {
   return [{ s: line, k: 'plain' }];
 }
 
-/** Rendered width of a line in columns: a tab advances to the next multiple of `tab` (the CSS `tab-size`, 4). */
-export function columns(s: string, tab = 4): number {
-  let c = 0;
-  for (const ch of s) c = ch === '\t' ? c + tab - (c % tab) : c + 1;
-  return c;
-}
-
 export function tokenize(lines: string[], lang: Lang): Tok[][] {
   if (lang === 'plain') return lines.map((s) => [{ s, k: 'plain' as Kind }]);
   if (lang === 'json') return lines.map(jsonLine);

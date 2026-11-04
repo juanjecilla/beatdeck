@@ -12,7 +12,7 @@
 .bd-code-bar { display: flex; align-items: center; gap: 22px; height: 54px; padding: 0 24px; border-bottom: 1px solid var(--hair); }
 .bd-code-dots { display: flex; gap: 9px; }
 .bd-code-dots i { width: 13px; height: 13px; border-radius: 50%; background: var(--hair-strong); display: block; }
-.bd-code-file { font-family: var(--font-mono); font-size: 20px; letter-spacing: 0.04em; color: var(--ink-3); white-space: nowrap; }
+.bd-code-file { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono); font-size: 20px; letter-spacing: 0.04em; color: var(--ink-3); white-space: nowrap; }
 .bd-code-body { padding: 26px 40px 30px; color: var(--code-plain); }
 .bd-code .tk-kw { color: var(--code-kw); }
 .bd-code .tk-str { color: var(--code-str); }

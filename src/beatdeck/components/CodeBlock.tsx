@@ -7,32 +7,22 @@
  */
 import { STAGE_H, STAGE_W } from '../app/stage';
 import { markRanges, type TermLine, type TermMark } from './Terminal';
-import { columns, tokenize, type Lang } from './syntax';
+import { fitSize } from './codefit';
+import { tokenize, type Lang } from './syntax';
 
 export type { Lang } from './syntax';
 export type CodeMark = TermMark;
 export type CodeLine = TermLine;
 
-/** Frame geometry at any font size, in stage pixels: title bar, body padding (top + bottom, left + right), borders. */
-export const CODE_BAR = 54;
-export const CODE_PAD_Y = 56;
-export const CODE_PAD_X = 80;
-export const CODE_BORDER = 2;
+export { CODE_BAR, CODE_PAD_Y, CODE_PAD_X, CODE_BORDER } from './codefit';
 /** Where `fit` keeps a block by default: clear of the footer chrome and of the side margin. */
 export const CODE_BOTTOM = STAGE_H - 105;
 export const CODE_RIGHT = STAGE_W - 130;
-/** Advance width of the mono font, in em, and the line height used by `.bd-term`. */
-const ADVANCE = 0.6;
-const LINE = 1.5;
 const LABEL_ROW = 1.25;
 
 /** Largest font size (≤ `size`, ≥ 20) at which the block, placed at (x, y), stays above `bottom` and left of `right`. */
 export function fitCodeSize(lines: CodeLine[], size: number, fit: { x: number; y: number; right?: number; bottom?: number }): number {
-  const rows = lines.reduce((n, l) => n + LINE + (l.labels ?? 0) * LABEL_ROW, 0);
-  const cols = Math.max(...lines.map((l) => columns(l.t)), 1); // tabs count to the next 4-column stop, as `tab-size: 4` renders them
-  const byHeight = ((fit.bottom ?? CODE_BOTTOM) - fit.y - CODE_BAR - CODE_PAD_Y - CODE_BORDER) / rows;
-  const byWidth = ((fit.right ?? CODE_RIGHT) - fit.x - CODE_PAD_X - CODE_BORDER) / (cols * ADVANCE);
-  return Math.max(20, Math.floor(Math.min(size, byHeight, byWidth)));
+  return fitSize(lines, size, fit, { right: CODE_RIGHT, bottom: CODE_BOTTOM });
 }
 
 /**
@@ -58,7 +48,7 @@ export function CodeBlock({ lines, lang = 'plain', size = 28, x, y, file, fit, s
   return (
     <div
       className={`bd-code${className ? ` ${className}` : ''}`}
-      style={{ position: x != null || y != null ? 'absolute' : undefined, left: x, top: y, ...style }}
+      style={{ position: x != null || y != null ? 'absolute' : undefined, left: x, top: y, ...style, ...(fit ? { maxWidth: (fit.right ?? CODE_RIGHT) - fit.x } : {}) }}
     >
       <div className="bd-code-bar">
         <span className="bd-code-dots"><i /><i /><i /></span>

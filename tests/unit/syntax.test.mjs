@@ -1,7 +1,8 @@
 // CodeBlock's highlighter (src/beatdeck/components/syntax.ts, plain TypeScript: Node strips the types).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { columns, tokenize } from '../../src/beatdeck/components/syntax.ts';
+import { tokenize } from '../../src/beatdeck/components/syntax.ts';
+import { columns, fitSize } from '../../src/beatdeck/components/codefit.ts';
 
 const kinds = (toks) => toks.map((t) => `${t.k}:${t.s}`);
 const text = (toks) => toks.map((t) => t.s).join('');
@@ -46,4 +47,34 @@ test('term: a new command ends the error colouring', () => {
   const rows = tokenize(['$ false', 'Error: failed', 'detail line', '$ echo ok', 'ok'], 'term');
   assert.equal(rows[2][0].k, 'err');
   assert.ok(rows[4].every((t) => t.k !== 'err'), kinds(rows[4]).join(' | '));
+});
+
+// `fit` sizes the font so the block stays inside the right bound. R20: it counted a tab as one column.
+const bounds = { right: 1790, bottom: 975 };
+const fit = (lines, size = 60, f = { x: 150, y: 200 }) => fitSize(lines, size, f, bounds);
+
+test('fit: a tabbed line fits like its tab-expanded equivalent', () => {
+  const tabbed = [{ t: '\t'.repeat(18) + 'X' }];
+  const spaces = [{ t: ' '.repeat(72) + 'X' }]; // 18 tabs of 4 columns, then X
+  assert.equal(fit(tabbed), fit(spaces));
+  assert.ok(fit(tabbed) < fit([{ t: 'X'.repeat(19) }]), 'tabs take more room than one column each');
+});
+test('fit: the frame ends inside the right bound', () => {
+  const lines = [{ t: '\t'.repeat(18) + 'X' }];
+  const px = fit(lines);
+  assert.ok(150 + 80 + 2 + 73 * 0.6 * px <= 1790 || px === 20);
+});
+
+// A long mark label hangs off the line: the font shrinks until it is inside the bound too.
+test('fit: a long label is included, enabled or not (the size must not change between beats)', () => {
+  const plain = [{ t: 'val x = 1' }];
+  const labelled = [{ t: 'val x = 1', labels: 1, marks: [{ text: 'x', label: 'a very long label that runs far to the right of the code and well past any sensible bound for it' }] }];
+  assert.ok(fit(labelled) < fit(plain));
+  const off = [{ ...labelled[0], marks: [{ ...labelled[0].marks[0], on: false }] }];
+  assert.equal(fit(off), fit(labelled));
+});
+test('fit: a short label changes nothing; a missing mark does not throw here', () => {
+  const plain = [{ t: 'val x = 1' }];
+  assert.equal(fit([{ t: 'val x = 1', labels: 1, marks: [{ text: 'x', label: 'ok' }] }]), fit(plain));
+  assert.doesNotThrow(() => fit([{ t: 'a', marks: [{ text: 'zzz', label: 'q' }] }]));
 });
