@@ -141,7 +141,7 @@ export function auditFrame() {
     ? [...document.querySelectorAll('[data-bd-chrome] *')]
       .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
       .map((e) => rectOf(e.getBoundingClientRect()))
-      .filter((r) => r.w > 1 && r.h > 1 && r.w * r.h < 0.5 * 1920 * 1080)
+      .filter((r) => r.w > 0 && r.h > 0 && r.w * r.h < 0.5 * 1920 * 1080) // a 1px rule is chrome; zero-size boxes never overlap
     : [];
   for (const f of frames) {
     if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);

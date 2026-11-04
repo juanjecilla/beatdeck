@@ -121,3 +121,10 @@ test('code frame: chrome hidden by an active cut does not count; chrome above it
   assert.ok(!reachesChrome(await audit(chromeAt(tick) + CUT + F)), 'chrome before the cut is hidden');
   assert.ok(reachesChrome(await audit(CUT + chromeAt(tick) + F)), 'chrome after the cut is on screen');
 });
+
+test('code frame: a 1px chrome rule counts (the size filter must not drop thin chrome)', async () => {
+  const rule = '<span style="left:320px;top:450px;width:600px;height:1px;background:#ccc"></span>';
+  assert.ok(reachesChrome(await audit(F + chromeAt(rule))));
+  const fractional = '<span style="left:320px;top:450px;width:600px;height:0.5px;background:#ccc"></span>';
+  assert.ok(reachesChrome(await audit(F + chromeAt(fractional))));
+});
