@@ -96,3 +96,28 @@ test('code frame: the text of another frame over this one is reported, a frame\'
   const r = await audit(a + b);
   assert.ok(r.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(r.errors));
 });
+
+// Review round 3 of the frame audit: what counts as deck chrome.
+const chromeAt = (inner) => `<div data-bd-chrome style="left:0;top:0;width:1920px;height:1080px">${inner}</div>`;
+const F = frame(300, 300, 800, 300);
+const reachesChrome = (r) => r.errors.some((e) => /reaches the deck chrome/.test(e));
+
+test('code frame: border-only chrome counts', async () => {
+  assert.ok(reachesChrome(await audit(F + chromeAt('<span style="left:320px;top:320px;width:200px;height:60px;border:2px solid #888"></span>'))));
+  assert.ok(!reachesChrome(await audit(F + chromeAt('<span style="left:320px;top:320px;width:200px;height:60px;border:2px solid transparent"></span>'))), 'a transparent border is not drawn');
+});
+test('code frame: a painted chrome element counts even with children; a plain wrapper around text does not widen it', async () => {
+  const bar = '<div style="left:320px;top:320px;width:300px;height:60px;background:#ccc"><span style="left:5px;top:5px;width:10px;height:10px"></span></div>';
+  assert.ok(reachesChrome(await audit(F + chromeAt(bar))));
+  // the title sits far from the frame; its unpainted wrapper spans the stage but is not an obstacle
+  const wrapped = '<div style="left:0;top:0;width:1920px;height:1080px"><span style="left:1500px;top:40px">TALK TITLE</span></div>';
+  assert.ok(!reachesChrome(await audit(F + chromeAt(wrapped))));
+});
+test('code frame: a stage-sized painted chrome layer is a backdrop, not an obstacle', async () => {
+  assert.ok(!reachesChrome(await audit(F + chromeAt('<div style="left:0;top:0;width:1920px;height:1080px;background:#111"></div>'))));
+});
+test('code frame: chrome hidden by an active cut does not count; chrome above it does', async () => {
+  const tick = '<span style="left:320px;top:320px;width:200px;height:60px;background:#ccc"></span>';
+  assert.ok(!reachesChrome(await audit(chromeAt(tick) + CUT + F)), 'chrome before the cut is hidden');
+  assert.ok(reachesChrome(await audit(CUT + chromeAt(tick) + F)), 'chrome after the cut is on screen');
+});

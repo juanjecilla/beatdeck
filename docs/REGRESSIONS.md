@@ -32,6 +32,11 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R23 | 0.8.0 | a dimmed `CodeBlock` line left its keywords and strings bright | `.bd-code .bd-term-line.dim [class^="tk-"]` | test `tests/browser/codeblock.test.mjs` |
 | R24 | 0.8.0 | a long mark label in a `CodeBlock` ran past the `fit` bound (labels hang off the line and were not counted) | `fitSize` shrinks until the furthest label (enabled or not) is inside the bound; its width model is checked against the browser | tests `tests/unit/syntax.test.mjs`, `tests/browser/codeblock.test.mjs` |
 | R25 | 0.8.0 | a long `file` title widened a `fit` `CodeBlock` past the bound | `maxWidth = right − x` and an ellipsis on `.bd-code-file` | test `tests/browser/codeblock.test.mjs` |
+| R26 | 0.8.1 | the frame audit skipped every code frame while a cut was active, including one in the Overlay | only frames before the cut in the DOM are skipped; text hidden by the cut is not "over" a frame | test `tests/browser/audit.test.mjs` |
+| R27 | 0.8.1 | an empty chrome layer covering the stage made every code frame fail with "reaches the deck chrome" | chrome must paint or hold its own text; plain wrappers and empty layers are not chrome | test `tests/browser/audit.test.mjs` |
+| R28 | 0.8.1 | the frame audit ignored the text of other code frames, so two overlapping frames went unreported | only the frame's own text is excluded | test `tests/browser/audit.test.mjs` |
+| R29 | 0.8.1 | border-only chrome, and painted chrome that has children, were not seen by the frame audit | `bordered()` and painted parents count; a rect covering half the stage is a backdrop | test `tests/browser/audit.test.mjs` |
+| R30 | 0.8.1 | chrome hidden by an active cut was still treated as an obstacle for frames | chrome before the cut in the DOM is skipped, like frames | test `tests/browser/audit.test.mjs` |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.

@@ -125,8 +125,23 @@ export function auditFrame() {
     const f = rectOf(el.getBoundingClientRect());
     return { el, ...f, name: JSON.stringify(el.querySelector('.bd-code-file')?.textContent ?? 'code') };
   });
+  // deck chrome a frame must not touch: elements that paint (background, image, painted shape, visible border) or hold
+  // their own text. Empty layers and plain wrappers are not chrome; a rect covering half the stage is a backdrop;
+  // chrome below an active cut is hidden by it, like the frames.
+  const bordered = (e) => {
+    const cs = getComputedStyle(e);
+    return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+      const m = cs[`border${side}Color`].match(/rgba?\(([^)]+)\)/);
+      const a = m ? (m[1].split(/[,/ ]+/).filter(Boolean)[3] ?? 1) : 1;
+      return parseFloat(cs[`border${side}Width`]) > 0 && cs[`border${side}Style`] !== 'none' && +a > 0.3;
+    });
+  };
+  const ownText = (e) => [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
   const chrome = frames.length
-    ? [...document.querySelectorAll('[data-bd-chrome] *')].filter((e) => !e.firstElementChild && visible(e) && (paints(e) || e.textContent.trim())).map((e) => rectOf(e.getBoundingClientRect())).filter((r) => r.w > 1 && r.h > 1)
+    ? [...document.querySelectorAll('[data-bd-chrome] *')]
+      .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
+      .map((e) => rectOf(e.getBoundingClientRect()))
+      .filter((r) => r.w > 1 && r.h > 1 && r.w * r.h < 0.5 * 1920 * 1080)
     : [];
   for (const f of frames) {
     if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
