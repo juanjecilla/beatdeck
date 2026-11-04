@@ -70,3 +70,29 @@ test('code frame: closer than the safe margin to an edge is a warning, not an er
   assert.deepEqual(r.errors, []);
   assert.ok(r.edges.some((e) => e.t.startsWith('code frame') && e.edge === 'left'), JSON.stringify(r.edges));
 });
+
+// Review round 2 of the frame audit.
+const CUT = '<div data-bd-cut style="left:0;top:0;width:1920px;height:1080px;background:#000;opacity:1"></div>';
+
+test('code frame: a frame below an active cut is hidden by it, one above it (Overlay) is still audited', async () => {
+  const below = await audit(frame(1500, 300, 800, 300) + CUT);
+  assert.ok(!below.errors.some((e) => /code frame/.test(e)), JSON.stringify(below.errors));
+  const above = await audit(CUT + frame(1500, 300, 800, 300));
+  assert.ok(above.errors.some((e) => /code frame .* outside/.test(e)), JSON.stringify(above.errors));
+});
+test('code frame: text hidden by a cut does not count as over a frame above it', async () => {
+  const r = await audit('<div style="left:340px;top:520px">Hidden by the cut</div>' + CUT + frame(300, 300, 800, 300));
+  assert.ok(!r.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(r.errors));
+});
+test('code frame: an empty chrome layer covering the stage is not chrome; chrome text still is', async () => {
+  const empty = '<div data-bd-chrome style="left:0;top:0;width:1920px;height:1080px"><span style="left:0;top:0;width:1920px;height:1080px"></span></div>';
+  assert.deepEqual((await audit(frame(300, 300, 800, 300) + empty)).errors, []);
+  const title = '<div data-bd-chrome style="left:0;top:0;width:1920px;height:1080px"><span style="left:300px;top:320px">TALK TITLE</span></div>';
+  assert.ok((await audit(frame(300, 300, 800, 300) + title)).errors.some((e) => /reaches the deck chrome/.test(e)));
+});
+test('code frame: the text of another frame over this one is reported, a frame\'s own text is not', async () => {
+  const a = frame(300, 300, 800, 300);
+  const b = frame(500, 500, 800, 300); // overlaps a; b's text sits in a's blank area
+  const r = await audit(a + b);
+  assert.ok(r.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(r.errors));
+});

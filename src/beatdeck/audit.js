@@ -77,7 +77,7 @@ export function auditFrame() {
         // the line box of large type is much taller than its glyphs: keep the central ~0.8 em for overlap tests
         const fpx = parseFloat(cs.fontSize);
         const inset = Math.max(0, (r.height - 0.8 * fpx) / 2);
-        const b = { x: (r.left - sr.left) / k, y: (r.top + inset - sr.top) / k, w: r.width / k, h: (r.height - 2 * inset) / k, t: n.textContent, n };
+        const b = { x: (r.left - sr.left) / k, y: (r.top + inset - sr.top) / k, w: r.width / k, h: (r.height - 2 * inset) / k, t: n.textContent, n, under: !!underCut };
         boxes.push(b);
         if (b.x < -2 || b.y < -2 || b.x + b.w > 1922 || b.y + b.h > 1082) {
           res.errors.push(`${short(b.t)} is outside the 1920×1080 stage (x ${Math.round(b.x)}…${Math.round(b.x + b.w)}, y ${Math.round(b.y)}…${Math.round(b.y + b.h)})`);
@@ -120,12 +120,13 @@ export function auditFrame() {
   // code frames (CodeBlock): the frame is one object; its own text is excluded from the text-over-frame test
   const rectOf = (r) => ({ x: (r.left - sr.left) / k, y: (r.top - sr.top) / k, w: r.width / k, h: (r.height) / k });
   const hit = (a, c) => Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x) > 0 && Math.min(a.y + a.h, c.y + c.h) - Math.max(a.y, c.y) > 0;
-  const frames = cutOn ? [] : [...stage.querySelectorAll('.bd-code')].filter(visible).map((el) => {
+  // frames below an active cut are hidden by it; one in the Overlay (after the cut in the DOM) is still on screen
+  const frames = [...stage.querySelectorAll('.bd-code')].filter((el) => visible(el) && !(cutOn && cut.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING)).map((el) => {
     const f = rectOf(el.getBoundingClientRect());
     return { el, ...f, name: JSON.stringify(el.querySelector('.bd-code-file')?.textContent ?? 'code') };
   });
   const chrome = frames.length
-    ? [...document.querySelectorAll('[data-bd-chrome] *')].filter((e) => !e.firstElementChild && visible(e)).map((e) => rectOf(e.getBoundingClientRect())).filter((r) => r.w > 1 && r.h > 1)
+    ? [...document.querySelectorAll('[data-bd-chrome] *')].filter((e) => !e.firstElementChild && visible(e) && (paints(e) || e.textContent.trim())).map((e) => rectOf(e.getBoundingClientRect())).filter((r) => r.w > 1 && r.h > 1)
     : [];
   for (const f of frames) {
     if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
@@ -136,7 +137,8 @@ export function auditFrame() {
       }
     }
     for (const b of boxes) {
-      if (b.n.parentElement.closest('.bd-code') || !hit(f, b)) continue;
+      // the frame's own text is not "over" it; another frame's text is. Text under an active cut is not on screen
+      if (f.el.contains(b.n) || b.under || !hit(f, b)) continue;
       res.errors.push(`${short(b.t)} overlaps the code frame ${f.name} (move one of them)`);
     }
   }
