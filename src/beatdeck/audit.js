@@ -167,7 +167,7 @@ export function auditFrame() {
       // a 1px rule is chrome; a painted rect covering half the stage is a backdrop (its fill is not an obstacle, its
       // visible border still is). A border-only outline of any size is chrome: only its edge strips are obstacles.
       .filter(({ e, r, backdrop }) => r.w > 0 && r.h > 0 && (!backdrop || bordered(e)))
-      .flatMap(({ e, r, solid, backdrop }) => (backdrop || !solid ? edgeRects(e, r) : [r]))
+      .flatMap(({ e, r, solid, backdrop }) => (backdrop || !solid ? edgeRects(e, r) : [r]).map((rect) => ({ e, ...rect }))) // keep the source element: a frame is not an obstacle to itself
       .filter((r) => r.w > 0 && r.h > 0)
     : [];
   // is the text under the frame in paint order? Look at the stack at the middle of their overlap. Unknown → not behind.
@@ -184,7 +184,7 @@ export function auditFrame() {
   try {
     for (const f of frames) {
       if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
-      else if (chrome.some((c) => hit(f, c))) res.errors.push(`code frame ${f.name} reaches the deck chrome (footer ticks or title): shrink it or use fit`);
+      else if (chrome.some((c) => !f.el.contains(c.e) && hit(f, c))) res.errors.push(`code frame ${f.name} reaches the deck chrome (footer ticks or title): shrink it or use fit`);
       else if (margin) {
         for (const [edge, d, m] of [['left', f.x, margin.x], ['right', 1920 - (f.x + f.w), margin.x], ['top', f.y, margin.y], ['bottom', 1080 - (f.y + f.h), margin.y]]) {
           if (d < m) res.edges.push({ t: `code frame ${f.name}`, edge, d: Math.round(d), m });

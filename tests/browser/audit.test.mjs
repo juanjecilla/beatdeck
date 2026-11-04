@@ -178,3 +178,11 @@ test('code frame: a large painted backdrop is not an obstacle, but its visible b
   assert.ok(!reachesChrome(await audit(F + backdrop('border:4px solid #888'))), 'a frame well inside is clear of the border');
   assert.ok(reachesChrome(await audit(frame(2, 300, 800, 300) + backdrop('border:4px solid #888'))), 'a frame crossing the left border strip is reported');
 });
+
+test('code frame: a frame rendered inside the chrome is not an obstacle to itself, but is to another frame', async () => {
+  const inChrome = chromeAt(frame(300, 300, 800, 300));
+  const alone = await audit(inChrome);
+  assert.ok(!reachesChrome(alone), JSON.stringify(alone.errors));
+  const other = await audit(inChrome + frame(600, 400, 800, 300));
+  assert.ok(reachesChrome(other), 'a second frame over a chrome-rendered one is reported');
+});
