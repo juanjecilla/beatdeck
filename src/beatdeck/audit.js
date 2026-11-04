@@ -157,7 +157,7 @@ export function auditFrame() {
   };
   const ownText = (e) => [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
   const chrome = frames.length
-    ? [...document.querySelectorAll('[data-bd-chrome] *')]
+    ? [...document.querySelectorAll('[data-bd-chrome], [data-bd-chrome] *')] // the marked root can paint (a footer bar) too
       .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
       .map((e) => ({ e, r: rectOf(e.getBoundingClientRect()), solid: ownText(e) || paints(e) }))
       // a 1px rule is chrome; a painted rect covering half the stage is a backdrop. A border-only outline of any

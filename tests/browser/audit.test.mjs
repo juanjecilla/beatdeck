@@ -162,3 +162,12 @@ test('code frame: the stacking helper leaves no style behind in the page', async
   await audit(frame(300, 300, 800, 300));
   assert.equal(await page.evaluate(() => [...document.querySelectorAll('style')].filter((x) => x.textContent === '*{pointer-events:auto!important}').length), 0);
 });
+
+test('code frame: a painted or bordered chrome root counts, not only its children', async () => {
+  const bar = (css) => `<div data-bd-chrome style="left:0;top:560px;width:1920px;height:80px;${css}"></div>`;
+  // the frame (300..1100 × 300..600) reaches y 560..600 of the bar
+  assert.ok(reachesChrome(await audit(F + bar('background:#222'))), 'painted root');
+  assert.ok(reachesChrome(await audit(F + bar('border-top:3px solid #888'))), 'bordered root: its top edge is at y 560');
+  assert.ok(!reachesChrome(await audit(frame(300, 300, 800, 200) + bar('background:#222'))), 'a frame that stops above the bar is clear');
+  assert.ok(!reachesChrome(await audit(F + bar(''))), 'an unpainted root is not chrome');
+});
