@@ -26,6 +26,12 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R17 | 0.7.0 | one page that failed to capture crashed the export report (`undefined.toFixed`): no `report.json`, remaining variants not run | failed-capture result had no `printDiff` → `printDiff: null`, report treats `== null` | test `tests/unit/export-report.test.mjs` (`failedPage`, `reportPage`) |
 | R18 | 0.7.1 | a new talk inherited `release.yml`, `upstream-sync.yml`, `tests/` and the repo's `test` scripts | `init` removes them; `upgrade` never adds `test*` scripts | CI `scaffold` job asserts it |
 | R19 | 0.7.0 | `upgrade` overwrote or removed an engine file it had no recorded hash for (a dir added by a newer beatdeck) without a backup | no hash counted as unedited → counts as edited | test `tests/unit/upgrade.test.mjs` |
+| R20 | 0.8.0 | `CodeBlock` `fit` counted a tab as one column, so a tab-indented block ran past the stage edge | `columns()` counts to the next 4-column stop, like `tab-size: 4`; `fitSize` (in `codefit.ts`) is tested against the tab-expanded line | test `tests/unit/syntax.test.mjs` |
+| R21 | 0.8.0 | XML highlighter: a `"` inside a single-quoted attribute value started a string that coloured the following lines | quote state tracks which quote opened the value, and only counts inside a tag (`don't` in text is text) | test `tests/unit/syntax.test.mjs` |
+| R22 | 0.8.0 | terminal highlighter kept colouring output as an error after a new `$ ` command | a `$ ` line resets the error state | test `tests/unit/syntax.test.mjs` |
+| R23 | 0.8.0 | a dimmed `CodeBlock` line left its keywords and strings bright | `.bd-code .bd-term-line.dim [class^="tk-"]` | test `tests/browser/codeblock.test.mjs` |
+| R24 | 0.8.0 | a long mark label in a `CodeBlock` ran past the `fit` bound (labels hang off the line and were not counted) | `fitSize` shrinks until the furthest label (enabled or not) is inside the bound; its width model is checked against the browser | tests `tests/unit/syntax.test.mjs`, `tests/browser/codeblock.test.mjs` |
+| R25 | 0.8.0 | a long `file` title widened a `fit` `CodeBlock` past the bound | `maxWidth = right − x` and an ellipsis on `.bd-code-file` | test `tests/browser/codeblock.test.mjs` |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.

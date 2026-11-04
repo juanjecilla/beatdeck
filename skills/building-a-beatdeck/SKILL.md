@@ -60,7 +60,7 @@ target URL, real screenshots/logos/photos. Put originals in `reference/` (read-o
   - **narration** (prose, `>` quotes: what the speaker *says*) → the presenter view (`source` / `note`). On
     stage it becomes a short statement in the speaker's own words — condensed, never reworded into new claims;
   - **facts** (bullets, figures, names) → on stage, exactly as written (same numbers, same rounding, same "~");
-  - **code blocks, commands, formulas, output** → on stage character for character (`Terminal`, or a
+  - **code blocks, commands, formulas, output** → on stage character for character (`Terminal`, `CodeBlock` for highlighted code in a frame, or a
     `data-exact` element — see step 6), never retyped from memory;
   - **stage directions** ("on screen…", "show how it grows…") → instructions for you, not text to display.
 

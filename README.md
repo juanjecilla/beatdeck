@@ -70,7 +70,7 @@ export const Idea = () => <Scene index={1}><Idea_ /></Scene>;
 ```
 
 Built in: `Reveal`, `Scene`, `CountUp`, `Typewriter`, `Terminal` (real commands and output, character-exact,
-with highlights and labels), `NodeBox` + `Arrow` (diagrams that draw themselves), `Plot` + `Zone` / `Series` /
+with highlights and labels), `CodeBlock` (the same in a window frame, with syntax colours), `NodeBox` + `Arrow` (diagrams that draw themselves), `Plot` + `Zone` / `Series` /
 `Marker` / `PlotLabel` (charts), `QR` (computed locally).
 
 The demo in `deck/` (7 scenes, 24 beats) uses every pattern: an automatic boot, a strike-through, a diagram

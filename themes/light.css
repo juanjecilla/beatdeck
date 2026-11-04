@@ -13,6 +13,10 @@
   --hair-strong: rgba(0, 0, 0, 0.18);
   --accent: #2f5fd9;
   --accent-strong: #2450c2;
+  /* code blocks: a JetBrains-light flavour */
+  --code-bg: #fbfbfa; --code-plain: #1e1f22; --code-kw: #0033b3; --code-str: #067d17; --code-num: #1750eb;
+  --code-com: #8c8c8c; --code-doc: #5f7a5f; --code-dtag: #3d7a3d; --code-ann: #9e880d; --code-fn: #00627a;
+  --code-type: #006f6f; --code-prop: #871094; --code-tag: #0033b3; --code-attr: #174ad4; --code-flag: #1750eb; --code-var: #871094; --code-err: #c7222d;
   /* the operator UI (overview, presenter, debug) stays dark: keep its accent readable on #0a0a0a */
   --op-accent: #7ea4ff;
   --op-accent-strong: #3d6fe8;
