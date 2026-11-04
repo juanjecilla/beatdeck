@@ -31,6 +31,8 @@
 .bd-code .tk-var { color: var(--code-var); }
 .bd-code .tk-err { color: var(--code-err); }
 .bd-code .tk-dim { color: var(--ink-3); }
+/* a dimmed line dims its highlighted tokens too (the token colours above would otherwise win) */
+.bd-code .bd-term-line.dim [class^="tk-"] { color: var(--ink-3); }
 
 .bd-mk { position: relative; transition: color 400ms; }
 .bd-mk::before {

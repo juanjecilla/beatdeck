@@ -7,7 +7,7 @@
  */
 import { STAGE_H, STAGE_W } from '../app/stage';
 import { markRanges, type TermLine, type TermMark } from './Terminal';
-import { tokenize, type Lang } from './syntax';
+import { columns, tokenize, type Lang } from './syntax';
 
 export type { Lang } from './syntax';
 export type CodeMark = TermMark;
@@ -29,7 +29,7 @@ const LABEL_ROW = 1.25;
 /** Largest font size (≤ `size`, ≥ 20) at which the block, placed at (x, y), stays above `bottom` and left of `right`. */
 export function fitCodeSize(lines: CodeLine[], size: number, fit: { x: number; y: number; right?: number; bottom?: number }): number {
   const rows = lines.reduce((n, l) => n + LINE + (l.labels ?? 0) * LABEL_ROW, 0);
-  const cols = Math.max(...lines.map((l) => l.t.length), 1);
+  const cols = Math.max(...lines.map((l) => columns(l.t)), 1); // tabs count to the next 4-column stop, as `tab-size: 4` renders them
   const byHeight = ((fit.bottom ?? CODE_BOTTOM) - fit.y - CODE_BAR - CODE_PAD_Y - CODE_BORDER) / rows;
   const byWidth = ((fit.right ?? CODE_RIGHT) - fit.x - CODE_PAD_X - CODE_BORDER) / (cols * ADVANCE);
   return Math.max(20, Math.floor(Math.min(size, byHeight, byWidth)));

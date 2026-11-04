@@ -63,21 +63,29 @@ function kotlinLine(line: string, st: { block: false | 'doc' | 'com' }): Tok[] {
   return out;
 }
 
-function xmlLine(line: string, st: { str: boolean }): Tok[] {
+/**
+ * `st.q` = the quote that opened an attribute value still open from a previous line; `st.tag` = inside `<name … >`.
+ * Quotes only count inside a tag: an apostrophe in text content (`don't`) is just text.
+ */
+function xmlLine(line: string, st: { q: false | '"' | "'"; tag: boolean }): Tok[] {
   const out: Tok[] = [];
   let i = 0;
   while (i < line.length) {
-    if (st.str) { // inside a multi-line attribute value
-      const end = line.indexOf('"', i);
+    if (st.q) { // inside a multi-line attribute value: only the quote that opened it closes it
+      const end = line.indexOf(st.q, i);
       const stop = end < 0 ? line.length : end + 1;
-      push(out, line.slice(i, stop), 'str'); i = stop; if (end >= 0) st.str = false; continue;
+      push(out, line.slice(i, stop), 'str'); i = stop; if (end >= 0) st.q = false; continue;
     }
     const rest = line.slice(i); let m: RegExpMatchArray | null;
     if ((m = rest.match(/^<!--.*?-->/))) { push(out, m[0], 'com'); i += m[0].length; continue; }
-    if ((m = rest.match(/^<\??\/?[\w:.-]+/))) { push(out, m[0], 'tag'); i += m[0].length; continue; }
-    if ((m = rest.match(/^\??\/?>/))) { push(out, m[0], 'tag'); i += m[0].length; continue; }
-    if ((m = rest.match(/^[\w:.-]+(?==)/))) { push(out, m[0], 'attr'); i += m[0].length; continue; }
-    if (rest[0] === '"') { const end = rest.indexOf('"', 1); const stop = end < 0 ? rest.length : end + 1; push(out, rest.slice(0, stop), 'str'); if (end < 0) st.str = true; i += stop; continue; }
+    if ((m = rest.match(/^<\??\/?[\w:.-]+/))) { push(out, m[0], 'tag'); st.tag = true; i += m[0].length; continue; }
+    if ((m = rest.match(/^\??\/?>/))) { push(out, m[0], 'tag'); st.tag = false; i += m[0].length; continue; }
+    if (st.tag && (m = rest.match(/^[\w:.-]+(?==)/))) { push(out, m[0], 'attr'); i += m[0].length; continue; }
+    if (st.tag && (rest[0] === '"' || rest[0] === "'")) {
+      const q = rest[0] as '"' | "'";
+      const end = rest.indexOf(q, 1); const stop = end < 0 ? rest.length : end + 1;
+      push(out, rest.slice(0, stop), 'str'); if (end < 0) st.q = q; i += stop; continue;
+    }
     push(out, rest[0], 'plain'); i += 1;
   }
   return out;
@@ -146,16 +154,23 @@ function outputLine(line: string, st: { err: boolean }): Tok[] {
   return [{ s: line, k: 'plain' }];
 }
 
+/** Rendered width of a line in columns: a tab advances to the next multiple of `tab` (the CSS `tab-size`, 4). */
+export function columns(s: string, tab = 4): number {
+  let c = 0;
+  for (const ch of s) c = ch === '\t' ? c + tab - (c % tab) : c + 1;
+  return c;
+}
+
 export function tokenize(lines: string[], lang: Lang): Tok[][] {
   if (lang === 'plain') return lines.map((s) => [{ s, k: 'plain' as Kind }]);
   if (lang === 'json') return lines.map(jsonLine);
-  if (lang === 'xml') { const st = { str: false }; return lines.map((l) => xmlLine(l, st)); }
+  if (lang === 'xml') { const st: { q: false | '"' | "'"; tag: boolean } = { q: false, tag: false }; return lines.map((l) => xmlLine(l, st)); }
   if (lang === 'kotlin') { const st: { block: false | 'doc' | 'com' } = { block: false }; return lines.map((l) => kotlinLine(l, st)); }
   // term: a line is shell if it starts with "$ " or continues a previous shell line (trailing "\" or an open double quote)
   const sh = { dq: false }; const out = { err: false }; let cont = false;
   return lines.map((l) => {
     const isShell = l.startsWith('$ ') || cont || sh.dq;
-    if (isShell) { const t = shellLine(l, sh); cont = l.trimEnd().endsWith('\\'); return t; }
+    if (isShell) { if (l.startsWith('$ ')) out.err = false; const t = shellLine(l, sh); cont = l.trimEnd().endsWith('\\'); return t; }
     cont = false; return outputLine(l, out);
   });
 }
