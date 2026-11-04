@@ -41,6 +41,7 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R32 | 0.8.1 | a frame inside a border-only chrome outline was reported as touching it (the whole box counted, not its painted edges) | border-only chrome is split into its edge strips after the area filter | test `tests/browser/audit.test.mjs` |
 | R33 | 0.8.1 | a border-only chrome element under a `transform` (on it or an ancestor) had its border strips measured unscaled, so a frame crossing the rendered border could pass | strip width × rendered scale (rendered stage width / `offsetWidth`) | test `tests/browser/audit.test.mjs` |
 | R34 | 0.8.1 | a large border-only outline (up to stage-sized) was dropped by the backdrop area filter, so a frame crossing its edge passed | the filter applies to painted / text elements only; outlines are always split into edge strips | test `tests/browser/audit.test.mjs` |
+| R35 | 0.8.1 | the frame audit reported text hidden BEHIND an opaque code frame as an overlap error (it is the covered-text warning's job); only text drawn over a frame is an error | paint order at the centre of the overlap (`elementsFromPoint`, same stacking test as covered text); the temporary style is removed in a `finally` | test `tests/browser/audit.test.mjs` |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.

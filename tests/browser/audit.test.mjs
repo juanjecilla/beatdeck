@@ -147,3 +147,18 @@ test('code frame: a stage-sized border-only outline is still chrome at its edges
   assert.ok(reachesChrome(await audit(frame(2, 300, 800, 300) + outline)), 'the frame crosses the left edge strip');
   assert.ok(!reachesChrome(await audit(F + outline)), 'a frame well inside is not touching it');
 });
+
+// Paint order: text drawn over a frame is an error; text behind it is hidden by it (the covered-text warning's job).
+test('code frame: text behind the frame is not an overlap error but is reported as covered; text over it is an error', async () => {
+  const solid = frame(300, 300, 800, 300).replace('border:1px solid #888', 'border:1px solid #888;background:#123');
+  const word = (top) => `<div style="left:340px;top:${top}px">Words under the card</div>`;
+  const behind = await audit(word(520) + solid);
+  assert.ok(!behind.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(behind.errors));
+  assert.ok(behind.covered.length > 0, 'the covered-text warning reports it');
+  const over = await audit(solid + word(520));
+  assert.ok(over.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(over.errors));
+});
+test('code frame: the stacking helper leaves no style behind in the page', async () => {
+  await audit(frame(300, 300, 800, 300));
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll('style')].filter((x) => x.textContent === '*{pointer-events:auto!important}').length), 0);
+});

@@ -166,19 +166,36 @@ export function auditFrame() {
       .flatMap(({ e, r, solid }) => (solid ? [r] : edgeRects(e, r)))
       .filter((r) => r.w > 0 && r.h > 0)
     : [];
-  for (const f of frames) {
-    if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
-    else if (chrome.some((c) => hit(f, c))) res.errors.push(`code frame ${f.name} reaches the deck chrome (footer ticks or title): shrink it or use fit`);
-    else if (margin) {
-      for (const [edge, d, m] of [['left', f.x, margin.x], ['right', 1920 - (f.x + f.w), margin.x], ['top', f.y, margin.y], ['bottom', 1080 - (f.y + f.h), margin.y]]) {
-        if (d < m) res.edges.push({ t: `code frame ${f.name}`, edge, d: Math.round(d), m });
+  // is the text under the frame in paint order? Look at the stack at the middle of their overlap. Unknown → not behind.
+  const lift2 = document.createElement('style');
+  lift2.textContent = '*{pointer-events:auto!important}';
+  document.head.appendChild(lift2);
+  const behind = (f, b) => {
+    const x0 = Math.max(f.x, b.x), x1 = Math.min(f.x + f.w, b.x + b.w), y0 = Math.max(f.y, b.y), y1 = Math.min(f.y + f.h, b.y + b.h);
+    const stack = document.elementsFromPoint(sr.left + ((x0 + x1) / 2) * k, sr.top + ((y0 + y1) / 2) * k);
+    const above = stack.findIndex((e) => f.el.contains(e)); // 0 = topmost
+    const text = stack.findIndex((e) => e === b.n.parentElement);
+    return above >= 0 && text >= 0 && above < text;
+  };
+  try {
+    for (const f of frames) {
+      if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
+      else if (chrome.some((c) => hit(f, c))) res.errors.push(`code frame ${f.name} reaches the deck chrome (footer ticks or title): shrink it or use fit`);
+      else if (margin) {
+        for (const [edge, d, m] of [['left', f.x, margin.x], ['right', 1920 - (f.x + f.w), margin.x], ['top', f.y, margin.y], ['bottom', 1080 - (f.y + f.h), margin.y]]) {
+          if (d < m) res.edges.push({ t: `code frame ${f.name}`, edge, d: Math.round(d), m });
+        }
+      }
+      for (const b of boxes) {
+        // the frame's own text is not "over" it; another frame's text is. Text under an active cut is not on screen
+        if (f.el.contains(b.n) || b.under || !hit(f, b)) continue;
+        // text BEHIND the frame is hidden by it: the covered-text warning reports that. Only text drawn over the frame is an error
+        if (behind(f, b)) continue;
+        res.errors.push(`${short(b.t)} overlaps the code frame ${f.name} (move one of them)`);
       }
     }
-    for (const b of boxes) {
-      // the frame's own text is not "over" it; another frame's text is. Text under an active cut is not on screen
-      if (f.el.contains(b.n) || b.under || !hit(f, b)) continue;
-      res.errors.push(`${short(b.t)} overlaps the code frame ${f.name} (move one of them)`);
-    }
+  } finally {
+    lift2.remove();
   }
   // overlapping text: two different text nodes whose line boxes share > 30% of the smaller one
   const seen = new Set();
