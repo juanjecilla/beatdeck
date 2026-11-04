@@ -41,3 +41,32 @@ test('text closer than the safe margin to an edge is a warning; far from it is n
   const far = await audit(TEXT, { x: 120, y: 100 });
   assert.deepEqual(far.edges, []);
 });
+
+// CodeBlock frames (.bd-code) are audited as objects.
+const frame = (x, y, w, h, extra = '') =>
+  `<div class="bd-code" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:1px solid #888">
+     <span class="bd-code-file" style="position:static">Greeter.kt</span>
+     <div style="left:20px;top:60px">fun greet()</div>${extra}</div>`;
+
+test('code frame: a frame well inside the stage has no findings (its own text is not "over" it)', async () => {
+  const r = await audit(frame(300, 300, 800, 300), { x: 120, y: 100 });
+  assert.deepEqual([r.errors, r.edges], [[], []]);
+});
+test('code frame: text drawn over a frame is an error (a caption under a block that grew)', async () => {
+  const r = await audit(frame(300, 300, 800, 300) + '<div style="left:340px;top:520px">Caption placed too high</div>');
+  assert.ok(r.errors.some((e) => /overlaps the code frame/.test(e)), JSON.stringify(r.errors));
+});
+test('code frame: a frame outside the stage is an error', async () => {
+  const r = await audit(frame(1500, 300, 800, 300));
+  assert.ok(r.errors.some((e) => /outside the 1920×1080 stage/.test(e)), JSON.stringify(r.errors));
+});
+test('code frame: a frame reaching the deck chrome is an error', async () => {
+  const chrome = '<div data-bd-chrome style="left:0;top:1000px;width:1920px;height:60px"><span style="left:100px;top:10px;width:300px;height:30px;background:#ccc"></span></div>';
+  const r = await audit(frame(300, 700, 800, 340) + chrome);
+  assert.ok(r.errors.some((e) => /reaches the deck chrome/.test(e)), JSON.stringify(r.errors));
+});
+test('code frame: closer than the safe margin to an edge is a warning, not an error', async () => {
+  const r = await audit(frame(40, 300, 800, 300), { x: 120, y: 100 });
+  assert.deepEqual(r.errors, []);
+  assert.ok(r.edges.some((e) => e.t.startsWith('code frame') && e.edge === 'left'), JSON.stringify(r.edges));
+});
