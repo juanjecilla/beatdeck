@@ -140,23 +140,30 @@ export function auditFrame() {
     return w;
   };
   const bordered = (e) => Object.values(borderWidths(e)).some((w) => w > 0);
-  // a border-only element is only its painted edges: a frame inside the outline is not touching it
+  // a border-only element is only its painted edges: a frame inside the outline is not touching it.
+  // Border widths are CSS px; the strips are in stage px, so scale by how much the element renders larger than its CSS
+  // box (a transform on it or an ancestor), measured as rendered stage width / offsetWidth (the stage's own scale
+  // is already divided out by rectOf).
   const edgeRects = (e, r) => {
     const w = borderWidths(e);
+    const sx = e.offsetWidth ? r.w / e.offsetWidth : 1;
+    const sy = e.offsetHeight ? r.h / e.offsetHeight : 1;
     return [
-      w.Top > 0 && { x: r.x, y: r.y, w: r.w, h: w.Top },
-      w.Bottom > 0 && { x: r.x, y: r.y + r.h - w.Bottom, w: r.w, h: w.Bottom },
-      w.Left > 0 && { x: r.x, y: r.y, w: w.Left, h: r.h },
-      w.Right > 0 && { x: r.x + r.w - w.Right, y: r.y, w: w.Right, h: r.h },
+      w.Top > 0 && { x: r.x, y: r.y, w: r.w, h: w.Top * sy },
+      w.Bottom > 0 && { x: r.x, y: r.y + r.h - w.Bottom * sy, w: r.w, h: w.Bottom * sy },
+      w.Left > 0 && { x: r.x, y: r.y, w: w.Left * sx, h: r.h },
+      w.Right > 0 && { x: r.x + r.w - w.Right * sx, y: r.y, w: w.Right * sx, h: r.h },
     ].filter(Boolean);
   };
   const ownText = (e) => [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
   const chrome = frames.length
     ? [...document.querySelectorAll('[data-bd-chrome] *')]
       .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
-      .map((e) => ({ e, r: rectOf(e.getBoundingClientRect()) }))
-      .filter(({ r }) => r.w > 0 && r.h > 0 && r.w * r.h < 0.5 * 1920 * 1080) // a 1px rule is chrome; a half-stage rect is a backdrop
-      .flatMap(({ e, r }) => (ownText(e) || paints(e) ? [r] : edgeRects(e, r)))
+      .map((e) => ({ e, r: rectOf(e.getBoundingClientRect()), solid: ownText(e) || paints(e) }))
+      // a 1px rule is chrome; a painted rect covering half the stage is a backdrop. A border-only outline of any
+      // size is chrome: only its edge strips are obstacles.
+      .filter(({ r, solid }) => r.w > 0 && r.h > 0 && (!solid || r.w * r.h < 0.5 * 1920 * 1080))
+      .flatMap(({ e, r, solid }) => (solid ? [r] : edgeRects(e, r)))
       .filter((r) => r.w > 0 && r.h > 0)
     : [];
   for (const f of frames) {

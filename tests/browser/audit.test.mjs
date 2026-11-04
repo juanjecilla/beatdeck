@@ -134,3 +134,16 @@ test('code frame: a frame inside a border-only outline is not touching it; one c
   assert.ok(!reachesChrome(await audit(F + outline(200, 200, 1100, 500))), 'frame (300..1100 × 300..600) sits inside the outline');
   assert.ok(reachesChrome(await audit(F + outline(700, 350, 800, 200))), 'the outline\'s left edge crosses the frame');
 });
+
+test('code frame: a border scaled up by a chrome transform is as wide as it renders', async () => {
+  // a 10px border under scale(2) is 20 stage px; the box renders at (300,300) 640x240, so its left edge is x 300..320 and
+  // a frame starting at x 312 (y 350..500, clear of the other edges) touches only the inner half, which an unscaled 10px misses
+  const scaled = chromeAt('<div style="left:0;top:0;width:1920px;height:1080px;transform:scale(2);transform-origin:0 0"><span style="left:150px;top:150px;width:300px;height:100px;border:10px solid #888"></span></div>');
+  assert.ok(reachesChrome(await audit(frame(312, 350, 200, 150) + scaled)));
+  assert.ok(!reachesChrome(await audit(frame(330, 350, 200, 150) + scaled)), 'inside the outline, clear of the 20px edge');
+});
+test('code frame: a stage-sized border-only outline is still chrome at its edges', async () => {
+  const outline = chromeAt('<span style="left:0;top:0;width:1920px;height:1080px;border:4px solid #888"></span>');
+  assert.ok(reachesChrome(await audit(frame(2, 300, 800, 300) + outline)), 'the frame crosses the left edge strip');
+  assert.ok(!reachesChrome(await audit(F + outline)), 'a frame well inside is not touching it');
+});

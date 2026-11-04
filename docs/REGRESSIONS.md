@@ -39,6 +39,8 @@ Every bug fixed in beatdeck gets a row here and a test that fails without the fi
 | R30 | 0.8.1 | chrome hidden by an active cut was still treated as an obstacle for frames | chrome before the cut in the DOM is skipped, like frames | test `tests/browser/audit.test.mjs` |
 | R31 | 0.8.1 | a 1px chrome rule (or thinner) was dropped by the size filter, so a frame crossing it was not reported | the filter keeps any nonzero extent | test `tests/browser/audit.test.mjs` |
 | R32 | 0.8.1 | a frame inside a border-only chrome outline was reported as touching it (the whole box counted, not its painted edges) | border-only chrome is split into its edge strips after the area filter | test `tests/browser/audit.test.mjs` |
+| R33 | 0.8.1 | a border-only chrome element under a `transform` (on it or an ancestor) had its border strips measured unscaled, so a frame crossing the rendered border could pass | strip width × rendered scale (rendered stage width / `offsetWidth`) | test `tests/browser/audit.test.mjs` |
+| R34 | 0.8.1 | a large border-only outline (up to stage-sized) was dropped by the backdrop area filter, so a frame crossing its edge passed | the filter applies to painted / text elements only; outlines are always split into edge strips | test `tests/browser/audit.test.mjs` |
 
 ## Adding a row
 1. Write the test first and watch it fail for the reason in **Symptom**.
