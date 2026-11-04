@@ -128,3 +128,9 @@ test('code frame: a 1px chrome rule counts (the size filter must not drop thin c
   const fractional = '<span style="left:320px;top:450px;width:600px;height:0.5px;background:#ccc"></span>';
   assert.ok(reachesChrome(await audit(F + chromeAt(fractional))));
 });
+
+test('code frame: a frame inside a border-only outline is not touching it; one crossing the border is', async () => {
+  const outline = (x, y, w, h) => chromeAt(`<span style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2px solid #888"></span>`);
+  assert.ok(!reachesChrome(await audit(F + outline(200, 200, 1100, 500))), 'frame (300..1100 × 300..600) sits inside the outline');
+  assert.ok(reachesChrome(await audit(F + outline(700, 350, 800, 200))), 'the outline\'s left edge crosses the frame');
+});

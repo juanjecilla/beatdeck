@@ -128,20 +128,36 @@ export function auditFrame() {
   // deck chrome a frame must not touch: elements that paint (background, image, painted shape, visible border) or hold
   // their own text. Empty layers and plain wrappers are not chrome; a rect covering half the stage is a backdrop;
   // chrome below an active cut is hidden by it, like the frames.
-  const bordered = (e) => {
+  // visible border widths per side, in stage px (the computed width is untransformed CSS px, so no scaling by k)
+  const borderWidths = (e) => {
     const cs = getComputedStyle(e);
-    return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+    const w = {};
+    for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
       const m = cs[`border${side}Color`].match(/rgba?\(([^)]+)\)/);
       const a = m ? (m[1].split(/[,/ ]+/).filter(Boolean)[3] ?? 1) : 1;
-      return parseFloat(cs[`border${side}Width`]) > 0 && cs[`border${side}Style`] !== 'none' && +a > 0.3;
-    });
+      w[side] = cs[`border${side}Style`] !== 'none' && +a > 0.3 ? parseFloat(cs[`border${side}Width`]) || 0 : 0;
+    }
+    return w;
+  };
+  const bordered = (e) => Object.values(borderWidths(e)).some((w) => w > 0);
+  // a border-only element is only its painted edges: a frame inside the outline is not touching it
+  const edgeRects = (e, r) => {
+    const w = borderWidths(e);
+    return [
+      w.Top > 0 && { x: r.x, y: r.y, w: r.w, h: w.Top },
+      w.Bottom > 0 && { x: r.x, y: r.y + r.h - w.Bottom, w: r.w, h: w.Bottom },
+      w.Left > 0 && { x: r.x, y: r.y, w: w.Left, h: r.h },
+      w.Right > 0 && { x: r.x + r.w - w.Right, y: r.y, w: w.Right, h: r.h },
+    ].filter(Boolean);
   };
   const ownText = (e) => [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
   const chrome = frames.length
     ? [...document.querySelectorAll('[data-bd-chrome] *')]
       .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
-      .map((e) => rectOf(e.getBoundingClientRect()))
-      .filter((r) => r.w > 0 && r.h > 0 && r.w * r.h < 0.5 * 1920 * 1080) // a 1px rule is chrome; zero-size boxes never overlap
+      .map((e) => ({ e, r: rectOf(e.getBoundingClientRect()) }))
+      .filter(({ r }) => r.w > 0 && r.h > 0 && r.w * r.h < 0.5 * 1920 * 1080) // a 1px rule is chrome; a half-stage rect is a backdrop
+      .flatMap(({ e, r }) => (ownText(e) || paints(e) ? [r] : edgeRects(e, r)))
+      .filter((r) => r.w > 0 && r.h > 0)
     : [];
   for (const f of frames) {
     if (f.x < -2 || f.y < -2 || f.x + f.w > 1922 || f.y + f.h > 1082) res.errors.push(`code frame ${f.name} is outside the 1920×1080 stage (x ${Math.round(f.x)}…${Math.round(f.x + f.w)}, y ${Math.round(f.y)}…${Math.round(f.y + f.h)})`);
