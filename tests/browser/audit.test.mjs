@@ -171,3 +171,10 @@ test('code frame: a painted or bordered chrome root counts, not only its childre
   assert.ok(!reachesChrome(await audit(frame(300, 300, 800, 200) + bar('background:#222'))), 'a frame that stops above the bar is clear');
   assert.ok(!reachesChrome(await audit(F + bar(''))), 'an unpainted root is not chrome');
 });
+
+test('code frame: a large painted backdrop is not an obstacle, but its visible border is', async () => {
+  const backdrop = (border) => chromeAt(`<div style="left:0;top:0;width:1920px;height:1080px;background:#111;${border}"></div>`);
+  assert.ok(!reachesChrome(await audit(F + backdrop(''))), 'fill only: a backdrop');
+  assert.ok(!reachesChrome(await audit(F + backdrop('border:4px solid #888'))), 'a frame well inside is clear of the border');
+  assert.ok(reachesChrome(await audit(frame(2, 300, 800, 300) + backdrop('border:4px solid #888'))), 'a frame crossing the left border strip is reported');
+});

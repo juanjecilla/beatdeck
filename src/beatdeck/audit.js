@@ -159,11 +159,15 @@ export function auditFrame() {
   const chrome = frames.length
     ? [...document.querySelectorAll('[data-bd-chrome], [data-bd-chrome] *')] // the marked root can paint (a footer bar) too
       .filter((e) => visible(e) && !(cutOn && cut.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) && (ownText(e) || paints(e) || bordered(e)))
-      .map((e) => ({ e, r: rectOf(e.getBoundingClientRect()), solid: ownText(e) || paints(e) }))
-      // a 1px rule is chrome; a painted rect covering half the stage is a backdrop. A border-only outline of any
-      // size is chrome: only its edge strips are obstacles.
-      .filter(({ r, solid }) => r.w > 0 && r.h > 0 && (!solid || r.w * r.h < 0.5 * 1920 * 1080))
-      .flatMap(({ e, r, solid }) => (solid ? [r] : edgeRects(e, r)))
+      .map((e) => {
+        const r = rectOf(e.getBoundingClientRect());
+        const solid = ownText(e) || paints(e);
+        return { e, r, solid, backdrop: solid && r.w * r.h >= 0.5 * 1920 * 1080 };
+      })
+      // a 1px rule is chrome; a painted rect covering half the stage is a backdrop (its fill is not an obstacle, its
+      // visible border still is). A border-only outline of any size is chrome: only its edge strips are obstacles.
+      .filter(({ e, r, backdrop }) => r.w > 0 && r.h > 0 && (!backdrop || bordered(e)))
+      .flatMap(({ e, r, solid, backdrop }) => (backdrop || !solid ? edgeRects(e, r) : [r]))
       .filter((r) => r.w > 0 && r.h > 0)
     : [];
   // is the text under the frame in paint order? Look at the stack at the middle of their overlap. Unknown → not behind.
