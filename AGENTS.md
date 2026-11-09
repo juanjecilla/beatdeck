@@ -65,3 +65,10 @@ Checks pass. The author cannot force that (`allow_author_approval: false`).
    then approves.
 4. Merge when CI is green and it has approved. If it is unavailable, an admin merges with `gh pr merge --admin`
    and the PR says so.
+
+Keep audit changes small. Each round of a narrower finding makes the audit logic harder to read (#10 took 11 rounds).
+
+5. A new audit false-positive class gets `data-audit="off"` on the element plus a note in the skill docs, not a new
+   heuristic, unless it hits more than one real deck.
+6. After 3 rounds in a row where the findings only narrow the same area, stop fixing: open an issue for the rest,
+   reply on each thread with "out of scope, tracked in #<n>", and resolve it.
