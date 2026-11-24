@@ -10,7 +10,7 @@ verification). This file is the short version.
 | Path | What | Edit? |
 | --- | --- | --- |
 | `deck/` | **the talk**: `deck.config.ts`, `scenes.ts` (beat map), `timeline.ts`, `index.tsx`, `scenes/` | yes |
-| `themes/` | `neutral.css` (default), `light.css` | copy/adjust |
+| `themes/` | `neutral.css` (default), `light.css`; `poster/` = an optional theme with components, example and `install.sh` (see its README) | copy/adjust |
 | `src/beatdeck/` | the engine (state, navigation, presenter, overview, debug, stage) | only for generic changes |
 | `examples/kernel-panic/` | a full 47-beat production talk, reference only | no |
 | `examples/i18n/` | a 7-beat deck in two locales (string tables), reference only | no |
