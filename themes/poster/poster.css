@@ -1,0 +1,106 @@
+/*
+ * beatdeck · "Poster" theme.
+ *
+ * A series of posters: every scene owns a full-bleed colour (a *tone*), type is a high-contrast serif, code and
+ * screenshots sit on cream "sheets" with a hard shadow, and a giant outlined number sits behind the content.
+ * Import it after neutral.css (which brings Inter, JetBrains Mono and the base type roles):
+ *
+ *     import '../themes/neutral.css';
+ *     import '../themes/poster.css';
+ *
+ * Scenes get their tone from <html data-tone="violet"> (components/poster.tsx → <ToneTheme map={…} />).
+ * The night edition is <html data-theme="dark">: black everywhere, the tone becomes the accent colour.
+ *
+ * Every text token is checked at ≥ 4.5:1 (WCAG AA) in every tone and both editions: node tools/contrast.mjs themes/poster.css
+ * If you change a colour, run it.
+ */
+@import '@fontsource-variable/fraunces/opsz.css';
+@import '@fontsource-variable/fraunces/opsz-italic.css';
+
+:root {
+  --font-display: 'Fraunces Variable', Georgia, serif;
+
+  /* tone: paper (the default) */
+  --bg: #f4ecd8;
+  --surface: #fffaf0;
+  --ink: #14120f;
+  --ink-2: rgba(20, 18, 15, 0.78);
+  --ink-3: rgba(20, 18, 15, 0.68);
+  --hair: rgba(20, 18, 15, 0.22);
+  --hair-strong: rgba(20, 18, 15, 0.4);
+  --accent: #b02a08;
+  --accent-strong: #8a2006;
+
+  /* sheets: cream cards that read the same on every tone */
+  --sheet: #fffaf0;
+  --sheet-ink: #14120f;
+  --sheet-dim: rgba(20, 18, 15, 0.7);
+  --sheet-accent: #b02a08;
+
+  --ok: #0b6e44;
+  --warning: #7a5200;
+  --fault: #b3261e;
+  --op-accent: #8ab4ff;
+  --op-accent-strong: #5b8cff;
+}
+
+/* ── tones (day edition). Dark-ink tones need nothing but --bg and --accent; light-ink tones restate the ink. ── */
+:root[data-tone='night']  { --bg: #0c0c0e; --ink: #f4ecd8; --ink-2: rgba(244, 236, 216, 0.78); --ink-3: rgba(244, 236, 216, 0.68); --hair: rgba(244, 236, 216, 0.22); --hair-strong: rgba(244, 236, 216, 0.4); --accent: #ffb703; }
+:root[data-tone='sun']    { --bg: #ffd23f; --accent: #8a2500; }
+:root[data-tone='amber']  { --bg: #ffb703; --accent: #4a1fa8; }
+:root[data-tone='coral']  { --bg: #ef5b3c; --accent: #14120f; --ink-2: rgba(20, 18, 15, 0.94); --ink-3: rgba(20, 18, 15, 0.88); }
+:root[data-tone='stone']  { --bg: #d9d4c7; --accent: #9a2306; }
+:root[data-tone='violet'] { --bg: #5b2bd1; --ink: #ffffff; --ink-2: rgba(255, 255, 255, 0.86); --ink-3: rgba(255, 255, 255, 0.78); --hair: rgba(255, 255, 255, 0.3); --hair-strong: rgba(255, 255, 255, 0.5); --accent: #ffd23f; }
+:root[data-tone='teal']   { --bg: #095d51; --ink: #ffffff; --ink-2: rgba(255, 255, 255, 0.88); --ink-3: rgba(255, 255, 255, 0.8); --hair: rgba(255, 255, 255, 0.3); --hair-strong: rgba(255, 255, 255, 0.5); --accent: #ffd23f; }
+:root[data-tone='blue']   { --bg: #1d4ed8; --ink: #ffffff; --ink-2: rgba(255, 255, 255, 0.88); --ink-3: rgba(255, 255, 255, 0.8); --hair: rgba(255, 255, 255, 0.3); --hair-strong: rgba(255, 255, 255, 0.5); --accent: #ffd23f; }
+
+/* ── the night edition (T): black everywhere, the tone's colour moves to the accent ── */
+:root[data-theme='dark'] {
+  --bg: #0c0c0e;
+  --surface: #17171a;
+  --ink: #f4ecd8;
+  --ink-2: rgba(244, 236, 216, 0.78);
+  --ink-3: rgba(244, 236, 216, 0.68);
+  --hair: rgba(244, 236, 216, 0.22);
+  --hair-strong: rgba(244, 236, 216, 0.4);
+  --accent: #ff8a5c;
+}
+:root[data-theme='dark'][data-tone='night']  { --accent: #ffb703; }
+:root[data-theme='dark'][data-tone='sun']    { --accent: #ffd23f; }
+:root[data-theme='dark'][data-tone='amber']  { --accent: #ffb703; }
+:root[data-theme='dark'][data-tone='coral']  { --accent: #ff9f80; }
+:root[data-theme='dark'][data-tone='violet'] { --accent: #c8aeff; }
+:root[data-theme='dark'][data-tone='teal']   { --accent: #5fd8c0; }
+:root[data-theme='dark'][data-tone='blue']   { --accent: #8ab4ff; }
+
+/* ── type: a poster voice ─────────────────────────────────────────────── */
+.t-statement { font-family: var(--font-display); font-weight: 800; font-variation-settings: 'opsz' 144; font-feature-settings: 'lnum' 1; letter-spacing: -0.018em; word-spacing: 0.07em; line-height: 0.94; white-space: nowrap; }
+.t-editorial { font-family: var(--font-display); font-weight: 500; font-variation-settings: 'opsz' 72; font-feature-settings: 'lnum' 1; letter-spacing: -0.005em; word-spacing: 0.04em; line-height: 1.1; }
+.t-numeral { font-family: var(--font-display); font-weight: 300; letter-spacing: -0.04em; line-height: 0.8; font-variant-numeric: tabular-nums; }
+.t-meta { font-family: var(--font-sans); font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-2); }
+.t-eyebrow { font-family: var(--font-sans); font-weight: 700; font-size: 24px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+
+/* Fraunces draws the digit 1 like a lowercase l ("a11y" reads "ally", "2001" reads "200l"): set such words in the sans. */
+.sans-word { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.045em; }
+
+/* ── sheets: cream cards with a hard shadow, for code, tool output and screenshots ── */
+.sheet {
+  background: var(--sheet); color: var(--sheet-ink); border: 4px solid var(--sheet-ink); border-radius: 6px;
+  box-shadow: 12px 12px 0 var(--sheet-ink); padding: 26px 32px;
+  /* everything inside (the Terminal included) reads the sheet's colours, not the tone's */
+  --ink: var(--sheet-ink); --ink-2: var(--sheet-dim); --ink-3: var(--sheet-dim); --accent: var(--sheet-accent); --bg: var(--sheet);
+  --hair: rgba(20, 18, 15, 0.22); --hair-strong: rgba(20, 18, 15, 0.4);
+}
+.sheet .t-meta { color: var(--sheet-dim); }
+.sheet img { display: block; border-radius: 4px; }
+
+/* the giant outlined scene number behind everything (decoration: hide it from assistive tech) */
+.poster-numeral { position: absolute; font-family: var(--font-display); font-weight: 900; font-variation-settings: 'opsz' 144; line-height: 0.74; letter-spacing: -0.06em; color: transparent; -webkit-text-stroke: 5px var(--ink); opacity: 0.22; user-select: none; transition: opacity 400ms; }
+
+/* Screen-reader navigation (components/a11y-kit.tsx <SrNav />): invisible until it has keyboard focus. */
+.sr-nav { position: absolute; left: 0; bottom: 0; z-index: 50; display: flex; gap: 12px; padding: 12px; pointer-events: none; }
+.sr-nav button { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.sr-nav button:focus-visible {
+  position: static; width: auto; height: auto; margin: 0; padding: 14px 26px; overflow: visible; clip: auto; pointer-events: auto;
+  font: 700 28px var(--font-sans); color: var(--bg); background: var(--ink); border-radius: 6px; outline: 4px solid var(--accent); outline-offset: 3px;
+}

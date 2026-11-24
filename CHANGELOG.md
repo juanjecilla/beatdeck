@@ -2,6 +2,9 @@
 
 Talk projects update with `npm run upgrade` (see README → Updating a talk).
 
+## Unreleased
+- **Poster theme** (`themes/poster/`, optional, not part of the engine files `upgrade` replaces): a full-bleed colour per scene, Fraunces serif, cream sheets for code and screenshots, a giant outlined scene number, a night edition. Ships `poster.css`, `Sheet`/`Mono`/`Shot`/`BigTitle`/`Stamp`/`Say`/`ToneTheme`/`Numeral`, a theme-independent accessibility kit (`ThemeToggle`, `StagePicture`, `LiveRegion`, `SrNav`), `tools/contrast.mjs` (WCAG AA over every tone and both editions), a six-scene example and `install.sh`. Not yet checked with `CodeBlock` (its `--code-*` colours are not set by the theme).
+
 ## 0.8.1
 - Audit: `.bd-code` frames (`CodeBlock`) are checked as objects. Errors: text drawn over a frame (the frame's own text
   excluded), a frame outside the stage or reaching the deck chrome (footer ticks, title). Frames closer than
